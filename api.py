@@ -1,0 +1,331 @@
+from printer import Printer, Level
+from argparser import Parser
+from enum import Enum
+from database import SQLite
+import json
+import csv
+
+import getpass
+import requests
+
+
+class Override(Enum):
+    FORCE_OUTPUT = True
+    USE_DEFAULTS = False
+
+
+class OutputFormat(Enum):
+    RAW = 'RAW'
+    SUM = 'SUM'
+    SUMMARY = 'SUMMARY'
+    CSV = 'CSV'
+
+    def __str__(self):
+        return self.value
+
+
+class API:
+
+    # ---------------------------------
+    # "Private" class variables
+    # ---------------------------------
+    __cAPI_KEY_HEADER: str = "Authorization"
+    __cUSER_AGENT_HEADER: str = "User-Agent"
+    __cUSER_AGENT_VALUE: str = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0"
+    __cUSER_ACCEPT_HEADER: str = "Accept"
+    __cUSER_ACCEPT_VALUE: str = "application/json"
+
+    __cBASE_URL: str = "https://expander.expanse.co/api/"
+    __cAPI_VERSION_1_URL: str = "v1/"
+    __cAPI_VERSION_2_URL: str = "v2/"
+
+    __cID_TOKEN_URL: str = __cBASE_URL + __cAPI_VERSION_1_URL + "IdToken/"
+    __cENTITY_URL:  str = __cBASE_URL + __cAPI_VERSION_1_URL + "Entity/"
+    __cENTITY_ID_URL:  str = __cBASE_URL + __cAPI_VERSION_1_URL + "Entity/"
+
+    __cASSETS_IP_RANGE_URL: str = __cBASE_URL + __cAPI_VERSION_2_URL + "ip-range"
+
+    __cEXPOSURE_TYPES_URL:  str = __cBASE_URL + __cAPI_VERSION_2_URL + "configurations/exposures/"
+
+    __m_verbose: bool = False
+    __m_debug: bool = False
+    __m_api_key_file:str = ""
+    __m_refresh_token: str = ""
+    __m_access_token: str = ""
+    __m_verify_https_certificate: bool = True
+    __m_api_connection_timeout: int = 30
+    __mPrinter: Printer = Printer
+    __m_use_proxy: bool = False
+    __m_proxy_url: str = ""
+    __m_proxy_port: int = 0
+    __m_proxy_username: str = ""
+    __m_proxy_password: str = ""
+    __m_output_format: OutputFormat
+
+    # ---------------------------------
+    # "Public" class variables
+    # ---------------------------------
+
+    @property  # getter method
+    def verbose(self) -> bool:
+        return self.__m_verbose
+
+    @verbose.setter  # setter method
+    def verbose(self: object, pVerbose: bool):
+        self.__m_verbose = pVerbose
+        self.__mPrinter.verbose = pVerbose
+
+    @property  # getter method
+    def debug(self) -> bool:
+        return self.__m_debug
+
+    @debug.setter  # setter method
+    def debug(self: object, pDebug: bool):
+        self.__m_debug = pDebug
+        self.__mPrinter.debug = pDebug
+
+    @property  # getter method
+    def refresh_token(self) -> str:
+        return self.__m_refresh_token
+
+    @refresh_token.setter  # setter method
+    def refresh_token(self: object, p_refresh_token: str):
+        self.__m_refresh_token = p_refresh_token
+
+    @property  # getter method
+    def access_token(self) -> str:
+        return self.__m_access_token
+
+    @access_token.setter  # setter method
+    def access_token(self: object, p_access_token: str):
+        self.__m_access_token = p_access_token
+
+    @property  # getter method
+    def api_key_file(self) -> str:
+        return self.__m_api_key_file
+
+    @api_key_file.setter  # setter method
+    def api_key_file(self: object, pApiKeyFile: str):
+        self.__m_api_key_file = pApiKeyFile
+
+    @property  # getter method
+    def use_proxy(self) -> bool:
+        return self.__m_use_proxy
+
+    @use_proxy.setter  # setter method
+    def use_proxy(self: object, p_use_proxy: bool):
+        self.__m_use_proxy = p_use_proxy
+
+    @property  # getter method
+    def proxy_url(self) -> str:
+        return self.__m_proxy_url
+
+    @proxy_url.setter  # setter method
+    def proxy_url(self: object, p_proxy_url: str):
+        self.__m_proxy_url = p_proxy_url
+
+    @property  # getter method
+    def proxy_port(self) -> int:
+        return self.__m_proxy_port
+
+    @proxy_port.setter  # setter method
+    def proxy_port(self: object, p_proxy_port: int):
+        self.__m_proxy_port = p_proxy_port
+
+    @property  # getter method
+    def proxy_username(self) -> str:
+        return self.__m_proxy_username
+
+    @proxy_username.setter  # setter method
+    def proxy_username(self: object, p_proxy_username: str):
+        self.__m_proxy_username = p_proxy_username
+
+    @property  # getter method
+    def proxy_password(self) -> str:
+        return self.__m_proxy_password
+
+    @proxy_password.setter  # setter method
+    def proxy_password(self: object, p_proxy_password: str):
+        self.__m_proxy_password = p_proxy_password
+
+    @property  # getter method
+    def verify_https_certificate(self) -> bool:
+        return self.__m_verify_https_certificate
+
+    @verify_https_certificate.setter  # setter method
+    def verify_https_certificate(self: object, p_verify_https_certificate: bool):
+        self.__m_verify_https_certificate = p_verify_https_certificate
+
+    @property  # getter method
+    def output_format(self) -> bool:
+        return self.__m_output_format
+
+    @output_format.setter  # setter method
+    def output_format(self: object, p_output_format: bool):
+        self.__m_output_format = p_output_format
+
+    # ---------------------------------
+    # public instance constructor
+    # ---------------------------------
+    def __init__(self, p_parser: Parser) -> None:
+        self.__m_verbose: bool = Parser.verbose
+        self.__m_debug: bool = Parser.debug
+        self.__m_api_key_file = Parser.api_key_file_path
+        self.__m_api_connection_timeout = Parser.api_connection_timeout
+        self.__m_verify_https_certificate = Parser.verify_https_certificate
+        self.__m_use_proxy = Parser.use_proxy
+        self.__m_proxy_url = Parser.proxy_url
+        self.__m_proxy_port = Parser.proxy_port
+        self.__m_proxy_username = Parser.proxy_username
+        self.__m_proxy_password = Parser.proxy_password
+        self.__mPrinter.verbose = Parser.verbose
+        self.__mPrinter.debug = Parser.debug
+        self.__m_output_format = Parser.output_format
+        SQLite.database_filename = Parser.database_filename
+        self.__parse_api_key()
+
+    # ---------------------------------
+    # private instance methods
+    # ---------------------------------
+    def __parse_api_key(self) -> None:
+        self.__mPrinter.print("Parsing refresh token from {}".format(self.api_key_file), Level.INFO)
+        with open(self.api_key_file) as l_key_file:
+            l_json_data = json.load(l_key_file)
+            self.__m_refresh_token = l_json_data["credentials"]["refresh-token"]
+        self.__mPrinter.print("Parsed refresh token", Level.SUCCESS)
+        self.__get_access_token()
+
+    def __get_access_token(self) -> None:
+
+        self.__mPrinter.print("Trying to retrieve new access token", Level.INFO)
+
+        try:
+            l_headers = {
+                self.__cAPI_KEY_HEADER: "Bearer {}".format(self.__m_refresh_token),
+                self.__cUSER_AGENT_HEADER: self.__cUSER_AGENT_VALUE,
+                self.__cUSER_ACCEPT_HEADER: self.__cUSER_ACCEPT_VALUE
+            }
+
+            l_http_response = self.__call_api(self.__cID_TOKEN_URL, l_headers)
+            self.__m_access_token = json.loads(l_http_response.text)["token"]
+
+            self.__mPrinter.print("Retrieved new access token", Level.SUCCESS)
+        except Exception as e:
+            self.__mPrinter.print("Error: __get_access_token() - " + str(e), Level.ERROR)
+
+    def __connect_to_api(self, p_url: str) -> requests.Response:
+        self.__mPrinter.print("Connecting to API", Level.INFO)
+
+        l_headers = {
+            self.__cAPI_KEY_HEADER: "JWT {}".format(self.__m_access_token),
+            self.__cUSER_AGENT_HEADER: self.__cUSER_AGENT_VALUE,
+            self.__cUSER_ACCEPT_HEADER: self.__cUSER_ACCEPT_VALUE
+        }
+
+        l_http_response = self.__call_api(p_url, l_headers)
+        self.__mPrinter.print("Connected to API", Level.SUCCESS)
+        return l_http_response
+
+    def __call_api(self, p_url: str, p_headers: dict):
+        try:
+            l_proxies: dict = {}
+            if self.__m_use_proxy:
+                self.__mPrinter.print("Using upstream proxy", Level.INFO)
+                l_proxies = self.__get_proxies()
+            l_http_response = requests.get(url=p_url, headers=p_headers, proxies=l_proxies, timeout=self.__m_api_connection_timeout, verify=self.__m_verify_https_certificate)
+            if l_http_response.status_code != 200:
+                raise ValueError("Call to API returned status " + str(l_http_response.status_code) + " - " + json.loads(l_http_response.text)["detail"])
+            self.__mPrinter.print("Connected to API", Level.SUCCESS)
+            return l_http_response
+        except Exception as lRequestError:
+            self.__mPrinter.print("Cannot connect to API: {} {}".format(type(lRequestError).__name__, lRequestError), Level.ERROR)
+            exit("Fatal Error: Cannot connect to API. Check connectivity to {}. {}".format(
+                    self.__cBASE_URL,
+                    'Upstream proxy is enabled in config.py. Ensure proxy settings are correct.' if self.__m_use_proxy else 'The proxy is not enabled. Should it be?'))
+
+    def __get_proxies(self):
+        # If proxy in use, create proxy URL in the format of http://user:password@example.com:port
+        # Otherwise, return empty dictionary
+        SCHEME = 0
+        BASE_URL = 1
+        l_proxy_handler: str = ""
+        if not self.__m_proxy_password:
+            self.__m_proxy_password = getpass.getpass('Please Enter Proxy Password: ')
+        l_parts = self.__m_proxy_url.split('://')
+        l_http_proxy_url: str = 'http://{}{}{}@{}{}{}'.format(
+            self.__m_proxy_username if self.__m_proxy_username else '',
+            ':' if self.__m_proxy_password else '',
+            requests.utils.requote_uri(self.__m_proxy_password) if self.__m_proxy_password else '',
+            l_parts[BASE_URL],
+            ':' if self.__m_proxy_port else '',
+            self.__m_proxy_port if self.__m_proxy_port else ''
+        )
+        l_https_proxy_url = l_http_proxy_url.replace('http://', 'https://')
+        l_password_mask = '*' * len(self.__m_proxy_password)
+        l_proxy_handlers = {'http':l_http_proxy_url, 'https':l_https_proxy_url}
+        self.__mPrinter.print("Building proxy handlers: {},{}".format(
+            l_http_proxy_url.replace(self.__m_proxy_password, l_password_mask),
+            l_https_proxy_url.replace(self.__m_proxy_password, l_password_mask)), Level.INFO)
+        return l_proxy_handlers
+
+    def __format_file_size(self, p_file_size_bytes: int, p_suffix: str = 'B'):
+        l_file_size: str = ""
+        for l_unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+            if abs(p_file_size_bytes) < 1024.0:
+                return "{} {}{}".format(round(p_file_size_bytes,2), l_unit, p_suffix)
+            p_file_size_bytes /= 1024.0
+
+    def __initialize_database(self) -> None:
+        if not self.__verify_database_exists():
+            self.__create_database()
+
+    def __verify_database_exists(self) -> bool:
+        return SQLite.verify_database_exists()
+
+    def __create_database(self) -> None:
+        SQLite.create_database()
+
+    # ---------------------------------
+    # public instance methods
+    # ---------------------------------
+    def test_connectivity(self) -> None:
+        try:
+            l_http_response = self.__connect_to_api(self.__cASSETS_IP_RANGE_URL)
+            if not self.verbose:
+                self.__mPrinter.print("SUCCESS: Connected to API", Level.PRINT_REGARDLESS)
+        except:
+            self.__mPrinter.print("Connection test failed. Unable to connect to API", Level.ERROR)
+
+    def __parse_exposure_types(self, l_data: list) -> list:
+        l_list: list = []
+        for l_item in l_data:
+            l_tuple = (l_item['severity'] or 'None', l_item['categoryName'] or 'None', l_item['fullNameSingular'])
+            l_list.append(l_tuple)
+
+        l_list.sort(key=lambda t: (t[0], t[1]))
+        return l_list
+
+    def list_exposure_types(self) -> None:
+        try:
+            self.__mPrinter.print("Fetching exposure types", Level.INFO)
+            l_http_response = self.__connect_to_api(self.__cEXPOSURE_TYPES_URL)
+            self.__mPrinter.print("Fetched exposure types", Level.SUCCESS)
+            l_json = json.loads(l_http_response.text)
+            l_data: list = l_json["data"]
+
+            if self.__m_output_format in [OutputFormat.SUM.value, OutputFormat.SUMMARY.value]:
+                l_list: list = self.__parse_exposure_types(l_data)
+                for l_tuple in l_list:
+                    print(', '.join(l_tuple))
+
+            elif self.__m_output_format == OutputFormat.RAW.value:
+                print(l_data)
+
+            elif self.__m_output_format == OutputFormat.CSV.value:
+                l_list: list = self.__parse_exposure_types(l_data)
+                print('"Severity", "Category Name", "Full Name"')
+                for l_tuple in l_list:
+                    print(', '.join('"{0}"'.format(l) for l in l_tuple))
+
+        except Exception as e:
+            self.__mPrinter.print("Error: list_exposure_types() - {}".format(str(e)), Level.ERROR)
