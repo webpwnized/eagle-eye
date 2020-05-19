@@ -49,4 +49,4 @@ class Parser:
         Parser.test_connectivity = p_args.test
         Parser.authenticate = p_args.authenticate
         Parser.list_exposure_types = p_args.list_exposure_types
-        Parser.output_format = p_args.output_format.value if p_args.output_format.value else None
+        Parser.output_format = p_args.output_format.value if hasattr(p_args.output_format, 'value') else None
