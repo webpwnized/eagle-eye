@@ -338,13 +338,13 @@ class API:
             l_json = json.loads(l_http_response.text)
             l_data: list = l_json["data"]
 
-            if self.__m_output_format in [OutputFormat.SUM.value, OutputFormat.SUMMARY.value]:
+            if self.__m_output_format == OutputFormat.RAW.value:
+                print(l_data)
+
+            elif self.__m_output_format in [OutputFormat.SUM.value, OutputFormat.SUMMARY.value]:
                 l_list: list = self.__parse_exposure_types(l_data)
                 for l_tuple in l_list:
                     print(', '.join(l_tuple))
-
-            elif self.__m_output_format == OutputFormat.RAW.value:
-                print(l_data)
 
             elif self.__m_output_format == OutputFormat.CSV.value:
                 l_list: list = self.__parse_exposure_types(l_data)
