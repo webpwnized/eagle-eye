@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from printer import Printer, Level
+from printer import Printer, Level, Force
 from argparser import Parser
 from api import API, OutputFormat
 from enum import Enum
@@ -35,6 +35,9 @@ def print_example_usage():
 
 
 def run_main_program():
+    LINES_BEFORE = 1
+    LINES_AFTER = 1
+
     Printer.verbose = Parser.verbose
     Printer.debug = Parser.debug
     Printer.log_filename = Parser.log_filename
@@ -48,7 +51,11 @@ def run_main_program():
         print_example_usage()
         exit(0)
 
-    l_api = API(p_parser=Parser)
+    if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types:
+        l_api = API(p_parser=Parser)
+    else:
+        lArgParser.print_usage()
+        Printer.print("Required arguments not provided", Level.ERROR, Force.FORCE, LINES_BEFORE, LINES_AFTER)
 
     if Parser.test_connectivity:
         l_api.test_connectivity()

@@ -2,6 +2,10 @@ from enum import Enum
 import logging
 from logging.handlers import RotatingFileHandler
 
+class Force(Enum):
+    FORCE = True
+    DO_NOT_FORCE = False
+
 class Level(Enum):
     INFO = 0
     WARNING = 1
@@ -160,15 +164,19 @@ class Printer:
         Printer.__m_enable_logging = False
 
     @staticmethod
-    def print(pMessage: str, pLevel: Level, p_force: bool = False) -> None:
+    def print(pMessage: str, pLevel: Level, p_force: bool = False, p_lines_before: int = 0, p_lines_after: int = 0) -> None:
         # Only print INFO and SUCCESS messages if verbose is true
         # Only print DEBUG messages if debug is true
         # Warning, Error are always printed
         try:
             if (pLevel in [Level.INFO, Level.SUCCESS]) and not (Printer.verbose or p_force): return None
             if (pLevel in [Level.DEBUG]) and not Printer.debug: return None
-            print("\033[1;{}m{}{}\033[21;0m".format(Printer.__mColorMap[pLevel], Printer.__mLevelMap[pLevel], pMessage))
 
+            for i in range(p_lines_before): print()
+            print("\033[1;{}m{}{}\033[21;0m".format(Printer.__mColorMap[pLevel], Printer.__mLevelMap[pLevel], pMessage))
+            for i in range(p_lines_after): print()
+
+            # Log message according to severity level
             if Printer.__m_enable_logging:
                 if pLevel == Level.DEBUG:
                     Printer.__m_logger.debug(pMessage)
@@ -182,4 +190,4 @@ class Printer:
                     Printer.__m_logger.critical(pMessage)
 
         except Exception as e:
-            print(e)
+            print(str(e))
