@@ -9,7 +9,6 @@ class Level(Enum):
     CRITICAL = 3
     SUCCESS = 4
     DEBUG = 5
-    PRINT_REGARDLESS = 6
 
 class Printer:
 
@@ -33,8 +32,7 @@ class Printer:
         Level.WARNING: __yellow,
         Level.ERROR: __red,
         Level.SUCCESS: __green,
-        Level.DEBUG: __cyan,
-        Level.PRINT_REGARDLESS: __blue
+        Level.DEBUG: __cyan
     }
     __mLevelMap = {
         Level.INFO: "[*] INFO: ",
@@ -42,8 +40,7 @@ class Printer:
         Level.ERROR: "[*] ERROR: ",
         Level.SUCCESS: "[*] SUCCESS: ",
         Level.CRITICAL: "[*] CRITICAL: ",
-        Level.DEBUG: "[*] DEBUG: ",
-        Level.PRINT_REGARDLESS: "[*] INFO: "
+        Level.DEBUG: "[*] DEBUG: "
     }
     __m_enable_logging: bool = False
     __m_logger: logging.Logger = None
@@ -163,12 +160,12 @@ class Printer:
         Printer.__m_enable_logging = False
 
     @staticmethod
-    def print(pMessage: str, pLevel: Level) -> None:
+    def print(pMessage: str, pLevel: Level, p_force: bool = False) -> None:
         # Only print INFO and SUCCESS messages if verbose is true
         # Only print DEBUG messages if debug is true
         # Warning, Error are always printed
         try:
-            if (pLevel in [Level.INFO, Level.SUCCESS]) and not Printer.verbose: return None
+            if (pLevel in [Level.INFO, Level.SUCCESS]) and not (Printer.verbose or p_force): return None
             if (pLevel in [Level.DEBUG]) and not Printer.debug: return None
             print("\033[1;{}m{}{}\033[21;0m".format(Printer.__mColorMap[pLevel], Printer.__mLevelMap[pLevel], pMessage))
 

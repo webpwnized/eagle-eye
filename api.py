@@ -3,7 +3,6 @@ from argparser import Parser
 from enum import Enum
 from database import SQLite
 import json
-import csv
 
 import getpass
 import requests
@@ -24,6 +23,11 @@ class OutputFormat(Enum):
         return self.value
 
 
+class AcceptHeader(Enum):
+    JSON = 'JSON'
+    CSV = 'CSV'
+
+
 class API:
 
     # ---------------------------------
@@ -32,8 +36,9 @@ class API:
     __cAPI_KEY_HEADER: str = "Authorization"
     __cUSER_AGENT_HEADER: str = "User-Agent"
     __cUSER_AGENT_VALUE: str = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0"
-    __cUSER_ACCEPT_HEADER: str = "Accept"
-    __cUSER_ACCEPT_VALUE: str = "application/json"
+    __ACCEPT_HEADER: str = "Accept"
+    __ACCEPT_JSON_VALUE: str = "application/json"
+    __ACCEPT_CSV_VALUE: str = "text/csv"
 
     __cBASE_URL: str = "https://expander.expanse.co/api/"
     __cAPI_VERSION_1_URL: str = "v1/"
@@ -61,6 +66,7 @@ class API:
     __m_proxy_username: str = ""
     __m_proxy_password: str = ""
     __m_output_format: OutputFormat
+    __m_accept_header: AcceptHeader = AcceptHeader.JSON
 
     # ---------------------------------
     # "Public" class variables
@@ -188,12 +194,15 @@ class API:
     # private instance methods
     # ---------------------------------
     def __parse_api_key(self) -> None:
-        self.__mPrinter.print("Parsing refresh token from {}".format(self.api_key_file), Level.INFO)
-        with open(self.api_key_file) as l_key_file:
-            l_json_data = json.load(l_key_file)
-            self.__m_refresh_token = l_json_data["credentials"]["refresh-token"]
-        self.__mPrinter.print("Parsed refresh token", Level.SUCCESS)
-        self.__get_access_token()
+        try:
+            self.__mPrinter.print("Parsing refresh token from {}".format(self.api_key_file), Level.INFO)
+            with open(self.api_key_file) as l_key_file:
+                l_json_data = json.load(l_key_file)
+                self.__m_refresh_token = l_json_data["credentials"]["refresh-token"]
+            self.__mPrinter.print("Parsed refresh token", Level.SUCCESS)
+            self.__get_access_token()
+        except Exception as e:
+            self.__mPrinter.print("__parse_api_key() - {0}".format(str(e)), Level.ERROR)
 
     def __get_access_token(self) -> None:
 
@@ -203,7 +212,7 @@ class API:
             l_headers = {
                 self.__cAPI_KEY_HEADER: "Bearer {}".format(self.__m_refresh_token),
                 self.__cUSER_AGENT_HEADER: self.__cUSER_AGENT_VALUE,
-                self.__cUSER_ACCEPT_HEADER: self.__cUSER_ACCEPT_VALUE
+                self.__ACCEPT_HEADER: self.__ACCEPT_JSON_VALUE
             }
 
             l_http_response = self.__call_api(self.__cID_TOKEN_URL, l_headers)
@@ -211,20 +220,23 @@ class API:
 
             self.__mPrinter.print("Retrieved new access token", Level.SUCCESS)
         except Exception as e:
-            self.__mPrinter.print("Error: __get_access_token() - " + str(e), Level.ERROR)
+            self.__mPrinter.print("__get_access_token() - {0}".format(str(e)), Level.ERROR)
 
     def __connect_to_api(self, p_url: str) -> requests.Response:
-        self.__mPrinter.print("Connecting to API", Level.INFO)
+        try:
+            self.__mPrinter.print("Connecting to API", Level.INFO)
 
-        l_headers = {
-            self.__cAPI_KEY_HEADER: "JWT {}".format(self.__m_access_token),
-            self.__cUSER_AGENT_HEADER: self.__cUSER_AGENT_VALUE,
-            self.__cUSER_ACCEPT_HEADER: self.__cUSER_ACCEPT_VALUE
-        }
+            l_headers = {
+                self.__cAPI_KEY_HEADER: "JWT {}".format(self.__m_access_token),
+                self.__cUSER_AGENT_HEADER: self.__cUSER_AGENT_VALUE,
+                self.__ACCEPT_HEADER: self.__ACCEPT_CSV_VALUE if self.__m_accept_header == OutputFormat.CSV else self.__ACCEPT_JSON_VALUE
+            }
 
-        l_http_response = self.__call_api(p_url, l_headers)
-        self.__mPrinter.print("Connected to API", Level.SUCCESS)
-        return l_http_response
+            l_http_response = self.__call_api(p_url, l_headers)
+            self.__mPrinter.print("Connected to API", Level.SUCCESS)
+            return l_http_response
+        except Exception as e:
+            self.__mPrinter.print("__connect_to_api() - {0}".format(str(e)), Level.ERROR)
 
     def __call_api(self, p_url: str, p_headers: dict):
         try:
@@ -239,34 +251,37 @@ class API:
             return l_http_response
         except Exception as lRequestError:
             self.__mPrinter.print("Cannot connect to API: {} {}".format(type(lRequestError).__name__, lRequestError), Level.ERROR)
-            exit("Fatal Error: Cannot connect to API. Check connectivity to {}. {}".format(
+            exit("Fatal Cannot connect to API. Check connectivity to {}. {}".format(
                     self.__cBASE_URL,
                     'Upstream proxy is enabled in config.py. Ensure proxy settings are correct.' if self.__m_use_proxy else 'The proxy is not enabled. Should it be?'))
 
     def __get_proxies(self):
-        # If proxy in use, create proxy URL in the format of http://user:password@example.com:port
-        # Otherwise, return empty dictionary
-        SCHEME = 0
-        BASE_URL = 1
-        l_proxy_handler: str = ""
-        if not self.__m_proxy_password:
-            self.__m_proxy_password = getpass.getpass('Please Enter Proxy Password: ')
-        l_parts = self.__m_proxy_url.split('://')
-        l_http_proxy_url: str = 'http://{}{}{}@{}{}{}'.format(
-            self.__m_proxy_username if self.__m_proxy_username else '',
-            ':' if self.__m_proxy_password else '',
-            requests.utils.requote_uri(self.__m_proxy_password) if self.__m_proxy_password else '',
-            l_parts[BASE_URL],
-            ':' if self.__m_proxy_port else '',
-            self.__m_proxy_port if self.__m_proxy_port else ''
-        )
-        l_https_proxy_url = l_http_proxy_url.replace('http://', 'https://')
-        l_password_mask = '*' * len(self.__m_proxy_password)
-        l_proxy_handlers = {'http':l_http_proxy_url, 'https':l_https_proxy_url}
-        self.__mPrinter.print("Building proxy handlers: {},{}".format(
-            l_http_proxy_url.replace(self.__m_proxy_password, l_password_mask),
-            l_https_proxy_url.replace(self.__m_proxy_password, l_password_mask)), Level.INFO)
-        return l_proxy_handlers
+        try:
+            # If proxy in use, create proxy URL in the format of http://user:password@example.com:port
+            # Otherwise, return empty dictionary
+            SCHEME = 0
+            BASE_URL = 1
+            l_proxy_handler: str = ""
+            if not self.__m_proxy_password:
+                self.__m_proxy_password = getpass.getpass('Please Enter Proxy Password: ')
+            l_parts = self.__m_proxy_url.split('://')
+            l_http_proxy_url: str = 'http://{}{}{}@{}{}{}'.format(
+                self.__m_proxy_username if self.__m_proxy_username else '',
+                ':' if self.__m_proxy_password else '',
+                requests.utils.requote_uri(self.__m_proxy_password) if self.__m_proxy_password else '',
+                l_parts[BASE_URL],
+                ':' if self.__m_proxy_port else '',
+                self.__m_proxy_port if self.__m_proxy_port else ''
+            )
+            l_https_proxy_url = l_http_proxy_url.replace('http://', 'https://')
+            l_password_mask = '*' * len(self.__m_proxy_password)
+            l_proxy_handlers = {'http':l_http_proxy_url, 'https':l_https_proxy_url}
+            self.__mPrinter.print("Building proxy handlers: {},{}".format(
+                l_http_proxy_url.replace(self.__m_proxy_password, l_password_mask),
+                l_https_proxy_url.replace(self.__m_proxy_password, l_password_mask)), Level.INFO)
+            return l_proxy_handlers
+        except Exception as e:
+            self.__mPrinter.print("__get_proxies() - {0}".format(str(e)), Level.ERROR)
 
     def __format_file_size(self, p_file_size_bytes: int, p_suffix: str = 'B'):
         l_file_size: str = ""
@@ -292,18 +307,28 @@ class API:
         try:
             l_http_response = self.__connect_to_api(self.__cASSETS_IP_RANGE_URL)
             if not self.verbose:
-                self.__mPrinter.print("SUCCESS: Connected to API", Level.PRINT_REGARDLESS)
-        except:
-            self.__mPrinter.print("Connection test failed. Unable to connect to API", Level.ERROR)
+                self.__mPrinter.print("Connected to API", Level.SUCCESS, True)
+        except Exception as e:
+            self.__mPrinter.print("Connection test failed. Unable to connect to API. {0}".format(str(e)), Level.ERROR)
+
+    def test_authentication(self) -> None:
+        try:
+            self.__get_access_token()
+            self.__mPrinter.print("JWT access token: {}".format(self.__m_access_token), Level.SUCCESS, True)
+        except Exception as e:
+            self.__mPrinter.print("Authentication test failed. {0}".format(str(e)), Level.ERROR)
 
     def __parse_exposure_types(self, l_data: list) -> list:
         l_list: list = []
-        for l_item in l_data:
-            l_tuple = (l_item['severity'] or 'None', l_item['categoryName'] or 'None', l_item['fullNameSingular'])
-            l_list.append(l_tuple)
+        try:
+            for l_item in l_data:
+                l_tuple = (l_item['severity'] or 'None', l_item['categoryName'] or 'None', l_item['fullNameSingular'])
+                l_list.append(l_tuple)
 
-        l_list.sort(key=lambda t: (t[0], t[1]))
-        return l_list
+            l_list.sort(key=lambda t: (t[0], t[1]))
+            return l_list
+        except Exception as e:
+            self.__mPrinter.print("__parse_exposure_types() - {0}".format(str(e)), Level.ERROR)
 
     def list_exposure_types(self) -> None:
         try:
@@ -328,4 +353,4 @@ class API:
                     print(', '.join('"{0}"'.format(l) for l in l_tuple))
 
         except Exception as e:
-            self.__mPrinter.print("Error: list_exposure_types() - {}".format(str(e)), Level.ERROR)
+            self.__mPrinter.print("list_exposure_types() - {0}".format(str(e)), Level.ERROR)

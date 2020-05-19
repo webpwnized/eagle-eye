@@ -6,19 +6,32 @@ from api import API, OutputFormat
 from enum import Enum
 import config as __config
 
-
 from argparse import RawTextHelpFormatter
 import argparse
 import sys
 
-
-
-
-l_version = '0.0.1 beta'
+l_version = '0.0.2 beta'
 
 
 def print_example_usage():
-    Printer.print("I do stuff")
+    print("""
+    --------------------------------
+    Test Connectivity
+    --------------------------------
+    python3 eagle-eye.py -t
+
+    --------------------------------
+    Get a JSON Web Token (JWT)
+    --------------------------------
+    python3 eagle-eye.py -a
+    
+    --------------------------------
+    List exposure types
+    --------------------------------
+    python3 eagle-eye.py -let -o RAW
+    python3 eagle-eye.py -let -o SUM
+    python3 eagle-eye.py -let -o CSV
+    """)
 
 
 def run_main_program():
@@ -39,9 +52,15 @@ def run_main_program():
 
     if Parser.test_connectivity:
         l_api.test_connectivity()
+        exit(0)
+
+    if Parser.authenticate:
+        l_api.test_authentication()
+        exit(0)
 
     if Parser.list_exposure_types:
         l_api.list_exposure_types()
+        exit(0)
 
 if __name__ == '__main__':
     lArgParser = argparse.ArgumentParser(description="""
@@ -61,22 +80,28 @@ if __name__ == '__main__':
                             help='Enable verbose output such as current progress and duration',
                             action='store_true')
     lArgParser.add_argument('-d', '--debug',
-                            help='Enable debug mode',
+                            help='Show debug output',
                             action='store_true')
 
-    requiredAguments = lArgParser.add_mutually_exclusive_group(required=True)
-    requiredAguments.add_argument('-e', '--examples',
+    l_utilities_group = lArgParser.add_argument_group(title="Utilities", description=None)
+    l_utilities_group.add_argument('-e', '--examples',
                                   help='Show examples and exit',
                                   action='store_true')
-    requiredAguments.add_argument('-t', '--test',
+    l_utilities_group.add_argument('-t', '--test',
                                   help='Test connectivity to API and exit',
                                   action='store_true')
-    requiredAguments.add_argument('-let', '--list-exposure-types',
-                                  help='List exposure types and exit',
+    l_utilities_group.add_argument('-a', '--authenticate',
+                                  help='Exchange a refresh token for an access token and exit',
                                   action='store_true')
 
-    lArgParser.add_argument('-o', '--output-format',
-                            help='Output format. One of RAW, SUM[MARY], CSV Required if -o, --output-format provided',
+    l_exposures_group = lArgParser.add_argument_group(
+        title="Exposures API Interface",
+        description="Methods to interact with the Exposures API")
+    l_exposures_group.add_argument('-let', '--list-exposure-types',
+                                  help='List exposure types and exit',
+                                  action='store_true')
+    l_exposures_group.add_argument('-o', '--output-format',
+                            help='Output format. Required if -o, --output-format provided',
                             required=('-let' in sys.argv or '--list-exposure-types' in sys.argv),
                             type=OutputFormat,
                             choices=list(OutputFormat),

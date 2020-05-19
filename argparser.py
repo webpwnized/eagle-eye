@@ -45,7 +45,8 @@ class Parser:
         Parser.proxy_port = p_config.PROXY_PORT
         Parser.proxy_username = p_config.PROXY_USERNAME
         Parser.proxy_password = p_config.PROXY_PASSWORD
-        Parser.test_connectivity = p_args.test
-        Parser.list_exposure_types = p_args.list_exposure_types
         Parser.show_examples = p_args.examples
-        Parser.output_format = p_args.output_format.value
+        Parser.test_connectivity = p_args.test
+        Parser.authenticate = p_args.authenticate
+        Parser.list_exposure_types = p_args.list_exposure_types
+        Parser.output_format = p_args.output_format or None
