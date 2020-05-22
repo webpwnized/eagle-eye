@@ -10,7 +10,7 @@ from argparse import RawTextHelpFormatter
 import argparse
 import sys
 
-l_version = '0.0.2 beta'
+l_version = '0.0.3 beta'
 
 
 def print_example_usage():
@@ -51,7 +51,7 @@ def run_main_program():
         print_example_usage()
         exit(0)
 
-    if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types:
+    if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types or Parser.list_exposures:
         l_api = API(p_parser=Parser)
     else:
         lArgParser.print_usage()
@@ -67,6 +67,10 @@ def run_main_program():
 
     if Parser.list_exposure_types:
         l_api.list_exposure_types()
+        exit(0)
+
+    if Parser.list_exposures:
+        l_api.get_exposed_ip_ports()
         exit(0)
 
 if __name__ == '__main__':
@@ -107,9 +111,12 @@ if __name__ == '__main__':
     l_exposures_group.add_argument('-let', '--list-exposure-types',
                                   help='List exposure types and exit',
                                   action='store_true')
+    l_exposures_group.add_argument('-le', '--list-exposures',
+                                  help='List exposures and exit',
+                                  action='store_true')
     l_exposures_group.add_argument('-o', '--output-format',
                             help='Output format. Required if -o, --output-format provided',
-                            required=('-let' in sys.argv or '--list-exposure-types' in sys.argv),
+                            required=('-let' in sys.argv or '--list-exposure-types' in sys.argv or '-le' in sys.argv or '--list-exposures' in sys.argv),
                             type=OutputFormat,
                             choices=list(OutputFormat),
                             action='store'

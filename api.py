@@ -14,9 +14,7 @@ class Override(Enum):
 
 
 class OutputFormat(Enum):
-    RAW = 'RAW'
-    SUM = 'SUM'
-    SUMMARY = 'SUMMARY'
+    JSON = 'JSON'
     CSV = 'CSV'
 
     def __str__(self):
@@ -49,8 +47,8 @@ class API:
     __cENTITY_ID_URL:  str = __cBASE_URL + __cAPI_VERSION_1_URL + "Entity/"
 
     __cASSETS_IP_RANGE_URL: str = __cBASE_URL + __cAPI_VERSION_2_URL + "ip-range"
-
     __cEXPOSURE_TYPES_URL:  str = __cBASE_URL + __cAPI_VERSION_2_URL + "configurations/exposures/"
+    __cEXPOSURES_IP_PORTS_URL: str = __cBASE_URL + __cAPI_VERSION_2_URL + "exposures/ip-ports"
 
     __m_verbose: bool = False
     __m_debug: bool = False
@@ -229,7 +227,7 @@ class API:
             l_headers = {
                 self.__cAPI_KEY_HEADER: "JWT {}".format(self.__m_access_token),
                 self.__cUSER_AGENT_HEADER: self.__cUSER_AGENT_VALUE,
-                self.__ACCEPT_HEADER: self.__ACCEPT_CSV_VALUE if self.__m_accept_header == OutputFormat.CSV else self.__ACCEPT_JSON_VALUE
+                self.__ACCEPT_HEADER: self.__ACCEPT_CSV_VALUE if self.__m_accept_header == OutputFormat.CSV.value else self.__ACCEPT_JSON_VALUE
             }
 
             l_http_response = self.__call_api(p_url, l_headers)
@@ -335,16 +333,12 @@ class API:
             self.__mPrinter.print("Fetching exposure types", Level.INFO)
             l_http_response = self.__connect_to_api(self.__cEXPOSURE_TYPES_URL)
             self.__mPrinter.print("Fetched exposure types", Level.SUCCESS)
+            self.__mPrinter.print("Parsing exposure types", Level.INFO)
             l_json = json.loads(l_http_response.text)
             l_data: list = l_json["data"]
 
-            if self.__m_output_format == OutputFormat.RAW.value:
+            if self.__m_output_format == OutputFormat.JSON.value:
                 print(l_data)
-
-            elif self.__m_output_format in [OutputFormat.SUM.value, OutputFormat.SUMMARY.value]:
-                l_list: list = self.__parse_exposure_types(l_data)
-                for l_tuple in l_list:
-                    print(', '.join(l_tuple))
 
             elif self.__m_output_format == OutputFormat.CSV.value:
                 l_list: list = self.__parse_exposure_types(l_data)
@@ -354,3 +348,18 @@ class API:
 
         except Exception as e:
             self.__mPrinter.print("list_exposure_types() - {0}".format(str(e)), Level.ERROR)
+
+    def get_exposed_ip_ports(self) -> None:
+        try:
+            self.__mPrinter.print("Fetching exposed ports", Level.INFO)
+            self.__m_accept_header = Parser.output_format
+            l_base_url = "{0}?limit={1}&offset={2}&exposureType={3}&inet={4}&content={5}&activityStatus={6}&lastEventWindow={7}&severity={8}&eventType={9}&tag={10}&businessUnit={11}&portNumber={12}&sort={13}".format(
+                self.__cEXPOSURE_TYPES_URL, "1", "0", "RDP Server", "", "", "active", "LAST_7_DAYS", "CRITICAL", "reappearance", "", "", "", ""
+            )
+            l_http_response = self.__connect_to_api(self.__cEXPOSURE_TYPES_URL)
+            self.__mPrinter.print("Fetched exposed ports", Level.SUCCESS)
+            self.__mPrinter.print("Parsing exposed ports", Level.INFO)
+            print(l_http_response.text)
+
+        except Exception as e:
+            self.__mPrinter.print("get_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
