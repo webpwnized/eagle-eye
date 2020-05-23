@@ -2,10 +2,13 @@ from printer import Printer, Level
 from argparser import Parser
 from enum import Enum
 from database import SQLite
-import json
 
+import json
 import getpass
 import requests
+import os
+
+l_script_directory = os.path.dirname(__file__)
 
 
 class Override(Enum):
@@ -16,6 +19,45 @@ class Override(Enum):
 class OutputFormat(Enum):
     JSON = 'JSON'
     CSV = 'CSV'
+
+    def __str__(self):
+        return self.value
+
+
+class ExposureActivityStatus(Enum):
+    ACTIVE = 'active'
+    INACTIVE = 'inactive'
+
+    def __str__(self):
+        return self.value
+
+
+class ExposureLastEventWindow(Enum):
+    LAST_7_DAYS = 'LAST_7_DAYS'
+    LAST_14_DAYS = 'LAST_14_DAYS'
+    LAST_30_DAYS = 'LAST_30_DAYS'
+    LAST_60_DAYS = 'LAST_60_DAYS'
+    LAST_90_DAYS = 'LAST_90_DAYS'
+    LAST_180_DAYS = 'LAST_180_DAYS'
+    LAST_365_DAYS = 'LAST_365_DAYS'
+
+    def __str__(self):
+        return self.value
+
+
+class ExposureSeverity(Enum):
+    ROUTINE = 'ROUTINE'
+    WARNING = 'WARNING'
+    CRITICAL = 'CRITICAL'
+
+    def __str__(self):
+        return self.value
+
+
+class ExposureEventType(Enum):
+    APPEARANCE = 'appearance'
+    REAPPEARANCE = 'reappearance'
+    DISAPPEARANCE = 'disappearance'
 
     def __str__(self):
         return self.value
@@ -193,8 +235,9 @@ class API:
     # ---------------------------------
     def __parse_api_key(self) -> None:
         try:
-            self.__mPrinter.print("Parsing refresh token from {}".format(self.api_key_file), Level.INFO)
-            with open(self.api_key_file) as l_key_file:
+            l_file = "{}/{}".format(l_script_directory, self.api_key_file)
+            self.__mPrinter.print("Parsing refresh token from {}".format(l_file), Level.INFO)
+            with open(l_file) as l_key_file:
                 l_json_data = json.load(l_key_file)
                 self.__m_refresh_token = l_json_data["credentials"]["refresh-token"]
             self.__mPrinter.print("Parsed refresh token", Level.SUCCESS)
@@ -242,6 +285,11 @@ class API:
             if self.__m_use_proxy:
                 self.__mPrinter.print("Using upstream proxy", Level.INFO)
                 l_proxies = self.__get_proxies()
+            if Parser.debug:
+                Printer.print("URL: {}".format(p_url), Level.DEBUG)
+                Printer.print("Headers: {}".format(p_headers), Level.DEBUG)
+                Printer.print("Proxy: {}".format(l_proxies), Level.DEBUG)
+                Printer.print("Verify certificate: {}".format(self.__m_verify_https_certificate), Level.DEBUG)
             l_http_response = requests.get(url=p_url, headers=p_headers, proxies=l_proxies, timeout=self.__m_api_connection_timeout, verify=self.__m_verify_https_certificate)
             if l_http_response.status_code != 200:
                 raise ValueError("Call to API returned status " + str(l_http_response.status_code) + " - " + json.loads(l_http_response.text)["detail"])
@@ -303,7 +351,8 @@ class API:
     # ---------------------------------
     def test_connectivity(self) -> None:
         try:
-            l_http_response = self.__connect_to_api(self.__cASSETS_IP_RANGE_URL)
+            l_url = self.__cASSETS_IP_RANGE_URL
+            l_http_response = self.__connect_to_api(l_url)
             if not self.verbose:
                 self.__mPrinter.print("Connected to API", Level.SUCCESS, True)
         except Exception as e:
@@ -320,7 +369,7 @@ class API:
         l_list: list = []
         try:
             for l_item in l_data:
-                l_tuple = (l_item['severity'] or 'None', l_item['categoryName'] or 'None', l_item['fullNameSingular'])
+                l_tuple = (l_item['severity'] or 'None', l_item['categoryName'] or 'None', l_item['fullNameSingular'], l_item['exposureType'], l_item['description'])
                 l_list.append(l_tuple)
 
             l_list.sort(key=lambda t: (t[0], t[1]))
@@ -342,24 +391,48 @@ class API:
 
             elif self.__m_output_format == OutputFormat.CSV.value:
                 l_list: list = self.__parse_exposure_types(l_data)
-                print('"Severity", "Category Name", "Full Name"')
+                print('"Severity", "Category Name", "Full Name", "Exposure Type", "Description"')
                 for l_tuple in l_list:
                     print(', '.join('"{0}"'.format(l) for l in l_tuple))
 
         except Exception as e:
             self.__mPrinter.print("list_exposure_types() - {0}".format(str(e)), Level.ERROR)
 
+    def __parse_exposures(self, l_data: list) -> list:
+        l_list: list = []
+        try:
+            for l_item in l_data:
+                l_tuple = (l_item['severity'] or 'None', l_item['exposureType'] or 'None', l_item['businessUnit']['name'], l_item['ip'], l_item['portNumber'], l_item['portProtocol'])
+                l_list.append(l_tuple)
+
+            l_list.sort(key=lambda t: (t[0], t[1], t[2], t[4]))
+            return l_list
+        except Exception as e:
+            self.__mPrinter.print("__parse_exposures() - {0}".format(str(e)), Level.ERROR)
+
     def get_exposed_ip_ports(self) -> None:
         try:
             self.__mPrinter.print("Fetching exposed ports", Level.INFO)
             self.__m_accept_header = Parser.output_format
-            l_base_url = "{0}?limit={1}&offset={2}&exposureType={3}&inet={4}&content={5}&activityStatus={6}&lastEventWindow={7}&severity={8}&eventType={9}&tag={10}&businessUnit={11}&portNumber={12}&sort={13}".format(
-                self.__cEXPOSURE_TYPES_URL, "1", "0", "RDP Server", "", "", "active", "LAST_7_DAYS", "CRITICAL", "reappearance", "", "", "", ""
+
+            l_base_url = "{0}?limit={1}&offset={2}&exposureType={3}&inet={4}&content={5}&activityStatus={6}&lastEventTime={7}&lastEventWindow={8}&severity={9}&eventType={10}&tag={11}&businessUnit={12}&portNumber={13}&sort={14}".format(
+                self.__cEXPOSURES_IP_PORTS_URL,
+                Parser.exposure_limit, Parser.exposure_offset, Parser.exposure_type, Parser.exposure_inet,
+                Parser.exposure_content, Parser.exposure_activity_status, Parser.exposure_last_event_time, Parser.exposure_last_event_window,
+                Parser.exposure_severity, Parser.exposure_event_type, Parser.exposure_tag, Parser.exposure_business_unit,
+                Parser.exposure_port_number, Parser.exposure_sort
             )
-            l_http_response = self.__connect_to_api(self.__cEXPOSURE_TYPES_URL)
+            l_http_response = self.__connect_to_api(l_base_url)
             self.__mPrinter.print("Fetched exposed ports", Level.SUCCESS)
             self.__mPrinter.print("Parsing exposed ports", Level.INFO)
             print(l_http_response.text)
+
+            # l_json = json.loads(l_http_response.text)
+            # l_data: list = l_json["data"]
+            # l_list: list = self.__parse_exposures(l_data)
+            # print('"Severity", "Exposure Type", "Business Unit", "IP", "Port", "Protocol"')
+            # for l_tuple in l_list:
+            #     print(', '.join('"{0}"'.format(l) for l in l_tuple))
 
         except Exception as e:
             self.__mPrinter.print("get_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
