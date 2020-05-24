@@ -292,7 +292,16 @@ class API:
                 Printer.print("Verify certificate: {}".format(self.__m_verify_https_certificate), Level.DEBUG)
             l_http_response = requests.get(url=p_url, headers=p_headers, proxies=l_proxies, timeout=self.__m_api_connection_timeout, verify=self.__m_verify_https_certificate)
             if l_http_response.status_code != 200:
-                raise ValueError("Call to API returned status " + str(l_http_response.status_code) + " - " + json.loads(l_http_response.text)["detail"])
+                l_status_code = str(l_http_response.status_code)
+                l_detail = ""
+                l_error_message =""
+                if "detail" in l_http_response.text:
+                    l_detail = " - {}".format(json.loads(l_http_response.text)["detail"])
+                if "errorMessages" in l_http_response.text:
+                    l_error_messages = json.loads(l_http_response.text)["errorMessages"][0]
+                    l_error_message = " - {}:{}".format(l_error_messages["code"],l_error_messages["message"])
+                l_message = "Call to API returned status {}{}{}".format(l_status_code, l_detail, l_error_message)
+                raise ValueError(l_message)
             self.__mPrinter.print("Connected to API", Level.SUCCESS)
             return l_http_response
         except Exception as lRequestError:
@@ -369,11 +378,20 @@ class API:
         l_list: list = []
         try:
             for l_item in l_data:
-                l_tuple = (l_item['severity'] or 'None', l_item['categoryName'] or 'None', l_item['fullNameSingular'], l_item['exposureType'], l_item['description'])
+                l_tuple = (l_item['severity'] or 'None', l_item['categoryName'] or 'None', l_item['fullNameSingular'], l_item['exposureType'])
+                if Parser.verbose:
+                    l_tuple = l_tuple + (','.join(l_item['sortableFields']),)
                 l_list.append(l_tuple)
 
             l_list.sort(key=lambda t: (t[0], t[1]))
-            return l_list
+
+            l_tuple = ("Severity", "Category", "Exposure", "Type")
+            if Parser.verbose:
+                l_tuple = l_tuple + ("Sortable Fields",)
+            l_tuples = [l_tuple]
+            l_tuples.extend(l_list)
+
+            return l_tuples
         except Exception as e:
             self.__mPrinter.print("__parse_exposure_types() - {0}".format(str(e)), Level.ERROR)
 
@@ -391,7 +409,6 @@ class API:
 
             elif self.__m_output_format == OutputFormat.CSV.value:
                 l_list: list = self.__parse_exposure_types(l_data)
-                print('"Severity", "Category Name", "Full Name", "Exposure Type", "Description"')
                 for l_tuple in l_list:
                     print(', '.join('"{0}"'.format(l) for l in l_tuple))
 

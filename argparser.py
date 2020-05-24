@@ -65,4 +65,4 @@ class Parser:
         Parser.exposure_business_unit = p_args.exposure_business_unit or ""
         Parser.exposure_port_number = p_args.exposure_port_number or ""
         Parser.exposure_sort = p_args.exposure_sort or ""
-        Parser.output_format = p_args.output_format.value if hasattr(p_args.output_format, 'value') else None
+        Parser.output_format = p_args.output_format.value.upper() if hasattr(p_args.output_format, 'value') else None

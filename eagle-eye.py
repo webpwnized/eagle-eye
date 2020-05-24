@@ -11,11 +11,18 @@ import argparse
 import sys
 
 
-l_version = '0.0.4 beta'
+l_version = '0.0.5 beta'
 
 
 def print_example_usage():
     print("""
+    --------------------------------
+    Get Help
+    --------------------------------
+    python3 eagle-eye.py -h
+    python3 eagle-eye.py -u
+    python3 eagle-eye.py -e
+
     --------------------------------
     Test Connectivity
     --------------------------------
@@ -29,8 +36,14 @@ def print_example_usage():
     --------------------------------
     List exposure types
     --------------------------------
-    python3 eagle-eye.py -let -o RAW
+    python3 eagle-eye.py -let -o JSON
     python3 eagle-eye.py -let -o CSV
+
+    --------------------------------
+    List exposures
+    --------------------------------
+    python3 eagle-eye.py -le -o JSON -et RDP_SERVER,NET_BIOS_NAME_SERVER
+    python3 eagle-eye.py -le -o CSV -et RDP_SERVER,NET_BIOS_NAME_SERVER -esort businessUnit.name,severity,port,ip
     """)
 
 
