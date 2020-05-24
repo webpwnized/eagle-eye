@@ -11,7 +11,7 @@ import argparse
 import sys
 
 
-l_version = '0.0.5 beta'
+l_version = '0.0.6 beta'
 
 
 def print_example_usage():
@@ -40,12 +40,17 @@ def print_example_usage():
     python3 eagle-eye.py -let -o CSV
 
     --------------------------------
-    List exposures
+    List exposures - Insecure protocols
     --------------------------------
-    python3 eagle-eye.py -le -o JSON -et RDP_SERVER,NET_BIOS_NAME_SERVER
-    python3 eagle-eye.py -le -o CSV -et RDP_SERVER,NET_BIOS_NAME_SERVER -esort businessUnit.name,severity,port,ip
-    """)
+    python3 eagle-eye.py -le -o JSON -et SIP_SERVER,XMPP_SERVER,BACNET_SERVER,ETHERNET_IP_SERVER,MODBUS_SERVER,VX_WORKS_SERVER,CASSANDRA_SERVER,COUCH_DB_SERVER,ELASTICSEARCH_SERVER,HADOOP_SERVER,MEMCACHED_SERVER,MONGO_SERVER,MS_SQL_SERVER,MY_SQL_SERVER,POSTGRES_SERVER,REDIS_SERVER,SHAREPOINT_SERVER,BUILDING_CONTROL_SYSTEM,DATA_STORAGE_AND_ANALYSIS,EMBEDDED_SYSTEM,NETWORKING_AND_SECURITY_INFRASTRUCTURE,RSYNC_SERVER,SMB_SERVER,UNENCRYPTED_FTP_SERVER,AJP_SERVER,NET_BIOS_NAME_SERVER,PC_ANYWHERE_SERVER,RDP_SERVER,RPC_BIND_SERVER,SNMP_SERVER,TELNET_SERVER,UPNP_SERVER,VNC_OVER_HTTP_SERVER,VNC_SERVER,FTP_SERVER,JENKINS_SERVER,SALT_STACK_SERVER,UNENCRYPTED_LOGIN
+    python3 eagle-eye.py -le -o CSV -et SIP_SERVER,XMPP_SERVER,BACNET_SERVER,ETHERNET_IP_SERVER,MODBUS_SERVER,VX_WORKS_SERVER,CASSANDRA_SERVER,COUCH_DB_SERVER,ELASTICSEARCH_SERVER,HADOOP_SERVER,MEMCACHED_SERVER,MONGO_SERVER,MS_SQL_SERVER,MY_SQL_SERVER,POSTGRES_SERVER,REDIS_SERVER,SHAREPOINT_SERVER,BUILDING_CONTROL_SYSTEM,DATA_STORAGE_AND_ANALYSIS,EMBEDDED_SYSTEM,NETWORKING_AND_SECURITY_INFRASTRUCTURE,RSYNC_SERVER,SMB_SERVER,UNENCRYPTED_FTP_SERVER,AJP_SERVER,NET_BIOS_NAME_SERVER,PC_ANYWHERE_SERVER,RDP_SERVER,RPC_BIND_SERVER,SNMP_SERVER,TELNET_SERVER,UPNP_SERVER,VNC_OVER_HTTP_SERVER,VNC_SERVER,FTP_SERVER,JENKINS_SERVER,SALT_STACK_SERVER,UNENCRYPTED_LOGIN -esort businessUnit.name,severity,port,ip 
 
+    --------------------------------
+    List exposures - Insecure certificates
+    --------------------------------
+    python3 eagle-eye.py -le -o JSON -et DOMAIN_CONTROL_VALIDATED_CERTIFICATE_ADVERTISEMENT,EXPIRED_WHEN_SCANNED_CERTIFICATE_ADVERTISEMENT,INSECURE_SIGNATURE_CERTIFICATE_ADVERTISEMENT,LONG_EXPIRATION_CERTIFICATE_ADVERTISEMENT,SELF_SIGNED_CERTIFICATE_ADVERTISEMENT,SHORT_KEY_CERTIFICATE_ADVERTISEMENT,WILDCARD_CERTIFICATE_ADVERTISEMENT
+    python3 eagle-eye.py -le -o CSV -et DOMAIN_CONTROL_VALIDATED_CERTIFICATE_ADVERTISEMENT,EXPIRED_WHEN_SCANNED_CERTIFICATE_ADVERTISEMENT,INSECURE_SIGNATURE_CERTIFICATE_ADVERTISEMENT,LONG_EXPIRATION_CERTIFICATE_ADVERTISEMENT,SELF_SIGNED_CERTIFICATE_ADVERTISEMENT,SHORT_KEY_CERTIFICATE_ADVERTISEMENT,WILDCARD_CERTIFICATE_ADVERTISEMENT -esort businessUnit.name,severity,port,ip 
+    """)
 
 def run_main_program():
     LINES_BEFORE = 1
@@ -113,10 +118,10 @@ if __name__ == '__main__':
 
     l_utilities_group = lArgParser.add_argument_group(title="Utilities", description=None)
     l_utilities_group.add_argument('-e', '--examples',
-                                  help='Show examples and exit',
+                                  help='Show various examples and exit',
                                   action='store_true')
     l_utilities_group.add_argument('-u', '--usage',
-                                  help='Show usage and exit',
+                                  help='Show brief usage and exit',
                                   action='store_true')
     l_utilities_group.add_argument('-t', '--test',
                                   help='Test connectivity to API and exit',
@@ -132,7 +137,7 @@ if __name__ == '__main__':
                                   help='List exposure types and exit',
                                   action='store_true')
     l_exposures_group.add_argument('-le', '--list-exposures',
-                                  help='List exposures and exit',
+                                  help='List exposures and exit. Options are shown below.',
                                   action='store_true')
 
     l_exposure_options_group = lArgParser.add_argument_group(

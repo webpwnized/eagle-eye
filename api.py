@@ -338,23 +338,6 @@ class API:
         except Exception as e:
             self.__mPrinter.print("__get_proxies() - {0}".format(str(e)), Level.ERROR)
 
-    def __format_file_size(self, p_file_size_bytes: int, p_suffix: str = 'B'):
-        l_file_size: str = ""
-        for l_unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-            if abs(p_file_size_bytes) < 1024.0:
-                return "{} {}{}".format(round(p_file_size_bytes,2), l_unit, p_suffix)
-            p_file_size_bytes /= 1024.0
-
-    def __initialize_database(self) -> None:
-        if not self.__verify_database_exists():
-            self.__create_database()
-
-    def __verify_database_exists(self) -> bool:
-        return SQLite.verify_database_exists()
-
-    def __create_database(self) -> None:
-        SQLite.create_database()
-
     # ---------------------------------
     # public instance methods
     # ---------------------------------
@@ -385,13 +368,13 @@ class API:
 
             l_list.sort(key=lambda t: (t[0], t[1]))
 
-            l_tuple = ("Severity", "Category", "Exposure", "Type")
+            l_header = ("Severity", "Category", "Exposure", "Type")
             if Parser.verbose:
-                l_tuple = l_tuple + ("Sortable Fields",)
-            l_tuples = [l_tuple]
-            l_tuples.extend(l_list)
+                l_header = l_header + ("Sortable Fields",)
+            l_records = [l_header]
+            l_records.extend(l_list)
 
-            return l_tuples
+            return l_records
         except Exception as e:
             self.__mPrinter.print("__parse_exposure_types() - {0}".format(str(e)), Level.ERROR)
 
