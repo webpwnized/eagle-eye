@@ -11,7 +11,7 @@ import argparse
 import sys
 
 
-l_version = '0.0.6 beta'
+l_version = '0.0.7 beta'
 
 
 def print_example_usage():
@@ -38,6 +38,12 @@ def print_example_usage():
     --------------------------------
     python3 eagle-eye.py -let -o JSON
     python3 eagle-eye.py -let -o CSV
+
+    --------------------------------
+    List exposure summaries
+    --------------------------------
+    python3 eagle-eye.py -les
+   python3 eagle-eye.py -les -et TELNET_SERVER
 
     --------------------------------
     List exposures - Insecure protocols
@@ -73,7 +79,7 @@ def run_main_program():
         print_example_usage()
         exit(0)
 
-    if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types or Parser.list_exposures:
+    if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types or Parser.list_exposures or Parser.list_exposure_summaries:
         l_api = API(p_parser=Parser)
     else:
         lArgParser.print_usage()
@@ -89,6 +95,10 @@ def run_main_program():
 
     if Parser.list_exposure_types:
         l_api.list_exposure_types()
+        exit(0)
+
+    if Parser.list_exposure_summaries:
+        l_api.summarize_exposed_ip_ports()
         exit(0)
 
     if Parser.list_exposures:
@@ -136,13 +146,16 @@ if __name__ == '__main__':
     l_exposures_group.add_argument('-let', '--list-exposure-types',
                                   help='List exposure types and exit',
                                   action='store_true')
+    l_exposures_group.add_argument('-les', '--list-exposure-summaries',
+                                   help='List exposures summaries and exit. Options are shown below.',
+                                   action='store_true')
     l_exposures_group.add_argument('-le', '--list-exposures',
                                   help='List exposures and exit. Options are shown below.',
                                   action='store_true')
 
     l_exposure_options_group = lArgParser.add_argument_group(
         title="Exposures API Interface Endpoint Options",
-        description="Arguments to methods that interact with the Exposures API. Use these options with '-le', '--list-exposures'")
+        description="Arguments to methods that interact with the Exposures and Summaries API. Use these options with '-le', '--list-exposures'")
     l_exposure_options_group.add_argument('-el', '--exposure-limit',
                             help='How many items to return at one time (default 100, max 10,000). Note that this parameter will be ignored when requesting CSV data.',
                             type=int,

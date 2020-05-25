@@ -51,6 +51,7 @@ class Parser:
         Parser.authenticate = p_args.authenticate
         Parser.list_exposure_types = p_args.list_exposure_types
         Parser.list_exposures = p_args.list_exposures
+        Parser.list_exposure_summaries = p_args.list_exposure_summaries
         Parser.exposure_limit = p_args.exposure_limit or ""
         Parser.exposure_offset = p_args.exposure_offset or 0
         Parser.exposure_type = p_args.exposure_type or ""

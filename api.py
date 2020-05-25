@@ -91,6 +91,7 @@ class API:
     __cASSETS_IP_RANGE_URL: str = __cBASE_URL + __cAPI_VERSION_2_URL + "ip-range"
     __cEXPOSURE_TYPES_URL:  str = __cBASE_URL + __cAPI_VERSION_2_URL + "configurations/exposures/"
     __cEXPOSURES_IP_PORTS_URL: str = __cBASE_URL + __cAPI_VERSION_2_URL + "exposures/ip-ports"
+    __cSUMMARIES_IP_PORTS_COUNTS_URL: str = __cBASE_URL + __cAPI_VERSION_2_URL + "summaries/ip-ports/counts"
 
     __m_verbose: bool = False
     __m_debug: bool = False
@@ -436,3 +437,29 @@ class API:
 
         except Exception as e:
             self.__mPrinter.print("get_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
+
+    def summarize_exposed_ip_ports(self) -> None:
+        try:
+            self.__mPrinter.print("Collecting summary", Level.INFO)
+            #self.__m_accept_header = Parser.output_format
+
+            l_base_url = "{0}?businessUnit={1}&tag={2}&inet={3}&content={4}&activityStatus={5}&lastEventTime={6}&lastEventWindow={7}&eventType={8}&exposureType={9}&severity={10}&portNumber={11}&".format(
+                self.__cSUMMARIES_IP_PORTS_COUNTS_URL,
+                Parser.exposure_business_unit, Parser.exposure_tag, Parser.exposure_inet, Parser.exposure_content,
+                Parser.exposure_activity_status, Parser.exposure_last_event_time, Parser.exposure_last_event_window, Parser.exposure_event_type,
+                Parser.exposure_type, Parser.exposure_severity, Parser.exposure_port_number
+            )
+            l_http_response = self.__connect_to_api(l_base_url)
+            self.__mPrinter.print("Collected summary", Level.SUCCESS)
+            self.__mPrinter.print("Parsing summary", Level.INFO)
+            print(l_http_response.text)
+
+            # l_json = json.loads(l_http_response.text)
+            # l_data: list = l_json["data"]
+            # l_list: list = self.__parse_exposures(l_data)
+            # print('"Severity", "Exposure Type", "Business Unit", "IP", "Port", "Protocol"')
+            # for l_tuple in l_list:
+            #     print(', '.join('"{0}"'.format(l) for l in l_tuple))
+
+        except Exception as e:
+            self.__mPrinter.print("summarize_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
