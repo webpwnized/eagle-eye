@@ -3,7 +3,6 @@
 from printer import Printer, Level, Force
 from argparser import Parser
 from api import API, OutputFormat, ExposureEventType, ExposureSeverity, ExposureActivityStatus, ExposureLastEventWindow
-from enum import Enum
 import config as __config
 
 from argparse import RawTextHelpFormatter
