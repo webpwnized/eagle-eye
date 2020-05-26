@@ -11,7 +11,7 @@ import argparse
 import sys
 
 
-l_version = '0.0.7 beta'
+l_version = '0.0.8 beta'
 
 
 def print_example_usage():
@@ -32,7 +32,7 @@ def print_example_usage():
     Get a JSON Web Token (JWT)
     --------------------------------
     python3 eagle-eye.py -a
-    
+
     --------------------------------
     List exposure types
     --------------------------------
@@ -43,7 +43,8 @@ def print_example_usage():
     List exposure summaries
     --------------------------------
     python3 eagle-eye.py -les
-   python3 eagle-eye.py -les -et TELNET_SERVER
+    python3 eagle-eye.py -les -et TELNET_SERVER
+    python3 eagle-eye.py -les -es CRITICAL
 
     --------------------------------
     List exposures - Insecure protocols

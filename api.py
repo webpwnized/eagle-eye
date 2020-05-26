@@ -428,20 +428,26 @@ class API:
             self.__mPrinter.print("Parsing exposed ports", Level.INFO)
             print(l_http_response.text)
 
-            # l_json = json.loads(l_http_response.text)
-            # l_data: list = l_json["data"]
-            # l_list: list = self.__parse_exposures(l_data)
-            # print('"Severity", "Exposure Type", "Business Unit", "IP", "Port", "Protocol"')
-            # for l_tuple in l_list:
-            #     print(', '.join('"{0}"'.format(l) for l in l_tuple))
-
         except Exception as e:
             self.__mPrinter.print("get_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
+
+    def __parse_summarized_exposures(self, l_data: list) -> list:
+        l_list: list = []
+        try:
+            for l_item in l_data:
+                l_count: int = l_item['count']
+                if l_count:
+                    l_tuple = (l_item['type'], l_count)
+                    l_list.append(l_tuple)
+
+            l_list.sort(key=lambda t: t[1], reverse=True)
+            return l_list
+        except Exception as e:
+            self.__mPrinter.print("__parse_summarized_exposures() - {0}".format(str(e)), Level.ERROR)
 
     def summarize_exposed_ip_ports(self) -> None:
         try:
             self.__mPrinter.print("Collecting summary", Level.INFO)
-            #self.__m_accept_header = Parser.output_format
 
             l_base_url = "{0}?businessUnit={1}&tag={2}&inet={3}&content={4}&activityStatus={5}&lastEventTime={6}&lastEventWindow={7}&eventType={8}&exposureType={9}&severity={10}&portNumber={11}&".format(
                 self.__cSUMMARIES_IP_PORTS_COUNTS_URL,
@@ -452,14 +458,12 @@ class API:
             l_http_response = self.__connect_to_api(l_base_url)
             self.__mPrinter.print("Collected summary", Level.SUCCESS)
             self.__mPrinter.print("Parsing summary", Level.INFO)
-            print(l_http_response.text)
 
-            # l_json = json.loads(l_http_response.text)
-            # l_data: list = l_json["data"]
-            # l_list: list = self.__parse_exposures(l_data)
-            # print('"Severity", "Exposure Type", "Business Unit", "IP", "Port", "Protocol"')
-            # for l_tuple in l_list:
-            #     print(', '.join('"{0}"'.format(l) for l in l_tuple))
+            l_json = json.loads(l_http_response.text)
+            l_data: list = l_json["data"]
+            l_list: list = self.__parse_summarized_exposures(l_data)
+            for l_tuple in l_list:
+                print(', '.join('"{0}"'.format(l) for l in l_tuple))
 
         except Exception as e:
             self.__mPrinter.print("summarize_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
