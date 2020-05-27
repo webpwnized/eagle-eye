@@ -81,6 +81,9 @@
 ##### Test Connectivity
     python3 eagle-eye.py -t
 
+##### List Business Units
+    python3 eagle-eye.py -lbu
+    
 ##### List exposure types
     python3 eagle-eye.py -let -o JSON
     python3 eagle-eye.py -let -o CSV

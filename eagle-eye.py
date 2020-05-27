@@ -33,6 +33,11 @@ def print_example_usage():
     python3 eagle-eye.py -a
 
     --------------------------------
+    List Business Units
+    --------------------------------
+    python3 eagle-eye.py -lbu
+    
+    --------------------------------
     List exposure types
     --------------------------------
     python3 eagle-eye.py -let -o JSON
