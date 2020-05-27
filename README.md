@@ -2,7 +2,7 @@
 
 ### Usage
 
-    usage: eagle-eye [-h] [-v] [-d] [-e] [-u] [-t] [-a] [-let] [-les] [-le]
+    usage: eagle-eye [-h] [-v] [-d] [-e] [-u] [-t] [-a] [-lbu] [-let] [-les] [-le]
                      [-el EXPOSURE_LIMIT] [-eo EXPOSURE_OFFSET]
                      [-et EXPOSURE_TYPE] [-ei EXPOSURE_INET]
                      [-ec EXPOSURE_CONTENT] [-eas {active,inactive}]
@@ -26,7 +26,8 @@
       -u, --usage           Show brief usage and exit
       -t, --test            Test connectivity to API and exit
       -a, --authenticate    Exchange a refresh token for an access token and exit
-    
+      -lbu, --list-business-units   List business units and exit
+
     Exposures API Interface Endpoints:
       Methods to interact with the Exposures API
     
@@ -81,7 +82,7 @@
 ##### Test Connectivity
     python3 eagle-eye.py -t
 
-##### List Business Units
+##### List business bnits
     python3 eagle-eye.py -lbu
     
 ##### List exposure types

@@ -33,7 +33,7 @@ def print_example_usage():
     python3 eagle-eye.py -a
 
     --------------------------------
-    List Business Units
+    List business units
     --------------------------------
     python3 eagle-eye.py -lbu
     
