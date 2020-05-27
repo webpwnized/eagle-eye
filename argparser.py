@@ -49,6 +49,7 @@ class Parser:
         Parser.show_usage = p_args.usage
         Parser.test_connectivity = p_args.test
         Parser.authenticate = p_args.authenticate
+        Parser.list_business_units = p_args.list_business_units
         Parser.list_exposure_types = p_args.list_exposure_types
         Parser.list_exposures = p_args.list_exposures
         Parser.list_exposure_summaries = p_args.list_exposure_summaries

@@ -10,7 +10,7 @@ import argparse
 import sys
 
 
-l_version = '0.0.8 beta'
+l_version = '0.0.9 beta'
 
 
 def print_example_usage():
@@ -81,7 +81,8 @@ def run_main_program():
         print_example_usage()
         exit(0)
 
-    if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types or Parser.list_exposures or Parser.list_exposure_summaries:
+    if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types or Parser.list_exposures or \
+            Parser.list_exposure_summaries or Parser.list_business_units:
         l_api = API(p_parser=Parser)
     else:
         lArgParser.print_usage()
@@ -95,6 +96,10 @@ def run_main_program():
         l_api.test_authentication()
         exit(0)
 
+    if Parser.list_business_units:
+        l_api.get_entities()
+        exit(0)
+
     if Parser.list_exposure_types:
         l_api.list_exposure_types()
         exit(0)
@@ -104,7 +109,7 @@ def run_main_program():
         exit(0)
 
     if Parser.list_exposures:
-        l_api.get_exposed_ip_ports()
+        l_api.get_exposures()
         exit(0)
 
 if __name__ == '__main__':
@@ -140,6 +145,9 @@ if __name__ == '__main__':
                                   action='store_true')
     l_utilities_group.add_argument('-a', '--authenticate',
                                   help='Exchange a refresh token for an access token and exit',
+                                  action='store_true')
+    l_utilities_group.add_argument('-lbu', '--list-business-units',
+                                  help='List business units and exit',
                                   action='store_true')
 
     l_exposures_group = lArgParser.add_argument_group(

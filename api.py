@@ -84,14 +84,13 @@ class API:
     __cAPI_VERSION_1_URL: str = "v1/"
     __cAPI_VERSION_2_URL: str = "v2/"
 
-    __cID_TOKEN_URL: str = __cBASE_URL + __cAPI_VERSION_1_URL + "IdToken/"
-    __cENTITY_URL:  str = __cBASE_URL + __cAPI_VERSION_1_URL + "Entity/"
-    __cENTITY_ID_URL:  str = __cBASE_URL + __cAPI_VERSION_1_URL + "Entity/"
+    __cID_TOKEN_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "IdToken/")
+    __cENTITY_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "Entity/")
 
-    __cASSETS_IP_RANGE_URL: str = __cBASE_URL + __cAPI_VERSION_2_URL + "ip-range"
-    __cEXPOSURE_TYPES_URL:  str = __cBASE_URL + __cAPI_VERSION_2_URL + "configurations/exposures/"
-    __cEXPOSURES_IP_PORTS_URL: str = __cBASE_URL + __cAPI_VERSION_2_URL + "exposures/ip-ports"
-    __cSUMMARIES_IP_PORTS_COUNTS_URL: str = __cBASE_URL + __cAPI_VERSION_2_URL + "summaries/ip-ports/counts"
+    __cASSETS_IP_RANGE_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "ip-range")
+    __cEXPOSURE_TYPES_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "configurations/exposures/")
+    __cEXPOSURES_IP_PORTS_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "exposures/ip-ports")
+    __cSUMMARIES_IP_PORTS_COUNTS_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "summaries/ip-ports/counts")
 
     __m_verbose: bool = False
     __m_debug: bool = False
@@ -354,7 +353,7 @@ class API:
     def test_authentication(self) -> None:
         try:
             self.__get_access_token()
-            self.__mPrinter.print("JWT access token: {}".format(self.__m_access_token), Level.SUCCESS, True)
+            self.__mPrinter.print("JWT access token: JWT {}".format(self.__m_access_token), Level.SUCCESS, True)
         except Exception as e:
             self.__mPrinter.print("Authentication test failed. {0}".format(str(e)), Level.ERROR)
 
@@ -411,7 +410,7 @@ class API:
         except Exception as e:
             self.__mPrinter.print("__parse_exposures() - {0}".format(str(e)), Level.ERROR)
 
-    def get_exposed_ip_ports(self) -> None:
+    def get_exposures(self) -> None:
         try:
             self.__mPrinter.print("Fetching exposed ports", Level.INFO)
             self.__m_accept_header = Parser.output_format
@@ -429,7 +428,7 @@ class API:
             print(l_http_response.text)
 
         except Exception as e:
-            self.__mPrinter.print("get_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
+            self.__mPrinter.print("get_exposures() - {0}".format(str(e)), Level.ERROR)
 
     def __parse_summarized_exposures(self, l_data: list) -> list:
         l_list: list = []
@@ -467,3 +466,32 @@ class API:
 
         except Exception as e:
             self.__mPrinter.print("summarize_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
+
+    def __parse_entities(self, l_data: list) -> list:
+        l_list: list = []
+        try:
+            for l_item in l_data:
+                l_tuple = (l_item['name'], l_item['id'])
+                l_list.append(l_tuple)
+
+            l_list.sort(key=lambda t: t[0], reverse=False)
+            return l_list
+        except Exception as e:
+            self.__mPrinter.print("__parse_entities() - {0}".format(str(e)), Level.ERROR)
+
+    def get_entities(self) -> None:
+        try:
+            self.__mPrinter.print("Fetching entities", Level.INFO)
+
+            l_http_response = self.__connect_to_api(self.__cENTITY_URL)
+            self.__mPrinter.print("Fetched entities", Level.SUCCESS)
+            self.__mPrinter.print("Parsing entities", Level.INFO)
+
+            l_json = json.loads(l_http_response.text)
+            l_data: list = l_json["results"]
+            l_list: list = self.__parse_entities(l_data)
+            for l_tuple in l_list:
+                print('\t'.join('"{0}"'.format(l) for l in l_tuple))
+
+        except Exception as e:
+            self.__mPrinter.print("get_entities() - {0}".format(str(e)), Level.ERROR)
