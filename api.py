@@ -364,7 +364,12 @@ class API:
                 l_tuple = (l_item['severity'] or 'None', l_item['categoryName'] or 'None', l_item['fullNameSingular'], l_item['exposureType'])
                 if Parser.verbose:
                     l_tuple = l_tuple + (','.join(l_item['sortableFields']),)
-                l_list.append(l_tuple)
+
+                if Parser.exposure_severity:
+                    if l_item['severity'] == Parser.exposure_severity.value:
+                        l_list.append(l_tuple)
+                else:
+                    l_list.append(l_tuple)
 
             l_list.sort(key=lambda t: (t[0], t[1]))
 
@@ -388,12 +393,17 @@ class API:
             l_data: list = l_json["data"]
 
             if self.__m_output_format == OutputFormat.JSON.value:
-                print(l_data)
+                if Parser.exposure_severity:
+                    for l_dict in l_data:
+                        if l_dict['severity'] == Parser.exposure_severity.value:
+                            print(l_dict)
+                else:
+                    print(l_data)
 
             elif self.__m_output_format == OutputFormat.CSV.value:
                 l_list: list = self.__parse_exposure_types(l_data)
                 for l_tuple in l_list:
-                    print(', '.join('"{0}"'.format(l) for l in l_tuple))
+                    print(','.join('{0}'.format(l) for l in l_tuple))
 
         except Exception as e:
             self.__mPrinter.print("list_exposure_types() - {0}".format(str(e)), Level.ERROR)
@@ -462,7 +472,7 @@ class API:
             l_data: list = l_json["data"]
             l_list: list = self.__parse_summarized_exposures(l_data)
             for l_tuple in l_list:
-                print(', '.join('"{0}"'.format(l) for l in l_tuple))
+                print(', '.join('{0}'.format(l) for l in l_tuple))
 
         except Exception as e:
             self.__mPrinter.print("summarize_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
@@ -495,7 +505,7 @@ class API:
             elif self.__m_output_format == OutputFormat.CSV.value:
                 l_list: list = self.__parse_entities(l_data)
                 for l_tuple in l_list:
-                    print(','.join('"{0}"'.format(l) for l in l_tuple))
+                    print(','.join('{0}'.format(l) for l in l_tuple))
 
         except Exception as e:
             self.__mPrinter.print("get_entities() - {0}".format(str(e)), Level.ERROR)

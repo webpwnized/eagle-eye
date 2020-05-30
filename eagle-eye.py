@@ -166,7 +166,7 @@ if __name__ == '__main__':
                                   help='List business units and exit',
                                   action='store_true')
     l_exposures_group.add_argument('-let', '--list-exposure-types',
-                                  help='List exposure types and exit',
+                                  help='List exposure types and exit. The results can be filtered by -es, --exposure-severity',
                                   action='store_true')
     l_exposures_group.add_argument('-les', '--list-exposure-summaries',
                                    help='List exposures summaries and exit. Options are shown below.',
