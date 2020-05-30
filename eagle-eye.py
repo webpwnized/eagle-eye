@@ -10,7 +10,7 @@ import argparse
 import sys
 
 
-l_version = '0.0.9 beta'
+l_version = '0.0.10 beta'
 
 
 def print_example_usage():
@@ -35,8 +35,9 @@ def print_example_usage():
     --------------------------------
     List business units
     --------------------------------
-    python3 eagle-eye.py -lbu
-    
+    python3 eagle-eye.py -lbu -o JSON
+    python3 eagle-eye.py -lbu -o CSV
+
     --------------------------------
     List exposure types
     --------------------------------
@@ -63,6 +64,12 @@ def print_example_usage():
     python3 eagle-eye.py -le -o JSON -et DOMAIN_CONTROL_VALIDATED_CERTIFICATE_ADVERTISEMENT,EXPIRED_WHEN_SCANNED_CERTIFICATE_ADVERTISEMENT,INSECURE_SIGNATURE_CERTIFICATE_ADVERTISEMENT,LONG_EXPIRATION_CERTIFICATE_ADVERTISEMENT,SELF_SIGNED_CERTIFICATE_ADVERTISEMENT,SHORT_KEY_CERTIFICATE_ADVERTISEMENT,WILDCARD_CERTIFICATE_ADVERTISEMENT
     
     python3 eagle-eye.py -le -o CSV -et DOMAIN_CONTROL_VALIDATED_CERTIFICATE_ADVERTISEMENT,EXPIRED_WHEN_SCANNED_CERTIFICATE_ADVERTISEMENT,INSECURE_SIGNATURE_CERTIFICATE_ADVERTISEMENT,LONG_EXPIRATION_CERTIFICATE_ADVERTISEMENT,SELF_SIGNED_CERTIFICATE_ADVERTISEMENT,SHORT_KEY_CERTIFICATE_ADVERTISEMENT,WILDCARD_CERTIFICATE_ADVERTISEMENT -esort businessUnit.name,severity,port,ip 
+
+    ----------------------------------------------------------------
+    List exposures - Web domains
+    ----------------------------------------------------------------
+    python3 eagle-eye.py -le -o CSV -et SERVER_SOFTWARE,APPLICATION_SERVER_SOFTWARE
+
     """)
 
 def run_main_program():
@@ -151,13 +158,13 @@ if __name__ == '__main__':
     l_utilities_group.add_argument('-a', '--authenticate',
                                   help='Exchange a refresh token for an access token and exit',
                                   action='store_true')
-    l_utilities_group.add_argument('-lbu', '--list-business-units',
-                                  help='List business units and exit',
-                                  action='store_true')
 
     l_exposures_group = lArgParser.add_argument_group(
         title="Exposures API Interface Endpoints",
         description="Methods to interact with the Exposures API")
+    l_exposures_group.add_argument('-lbu', '--list-business-units',
+                                  help='List business units and exit',
+                                  action='store_true')
     l_exposures_group.add_argument('-let', '--list-exposure-types',
                                   help='List exposure types and exit',
                                   action='store_true')
@@ -247,7 +254,7 @@ if __name__ == '__main__':
     )
     l_exposure_options_group.add_argument('-o', '--output-format',
                             help='Output format. Required if -o, --output-format provided',
-                            required=('-let' in sys.argv or '--list-exposure-types' in sys.argv or '-le' in sys.argv or '--list-exposures' in sys.argv),
+                            required=('-let' in sys.argv or '--list-exposure-types' in sys.argv or '-le' in sys.argv or '--list-exposures' in sys.argv  or '-lbu' in sys.argv  or '--list-business-units' in sys.argv),
                             type=OutputFormat,
                             choices=list(OutputFormat),
                             action='store'

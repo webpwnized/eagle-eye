@@ -489,9 +489,13 @@ class API:
 
             l_json = json.loads(l_http_response.text)
             l_data: list = l_json["results"]
-            l_list: list = self.__parse_entities(l_data)
-            for l_tuple in l_list:
-                print('\t'.join('"{0}"'.format(l) for l in l_tuple))
+
+            if self.__m_output_format == OutputFormat.JSON.value:
+                print(l_data)
+            elif self.__m_output_format == OutputFormat.CSV.value:
+                l_list: list = self.__parse_entities(l_data)
+                for l_tuple in l_list:
+                    print(','.join('"{0}"'.format(l) for l in l_tuple))
 
         except Exception as e:
             self.__mPrinter.print("get_entities() - {0}".format(str(e)), Level.ERROR)
