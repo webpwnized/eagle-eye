@@ -10,7 +10,7 @@ import argparse
 import sys
 
 
-l_version = '0.0.10 beta'
+l_version = '0.0.11 beta'
 
 
 def print_example_usage():
@@ -47,9 +47,10 @@ def print_example_usage():
     --------------------------------
     List exposure summaries
     --------------------------------
-    python3 eagle-eye.py -les
-    python3 eagle-eye.py -les -et TELNET_SERVER
-    python3 eagle-eye.py -les -es CRITICAL
+    python3 eagle-eye.py -les -o JSON
+    python3 eagle-eye.py -les -o CSV
+    python3 eagle-eye.py -les -et TELNET_SERVER -o CSV
+    python3 eagle-eye.py -les -es CRITICAL -o CSV
 
     ----------------------------------------------------------------
     List exposures - Insecure protocols
@@ -169,10 +170,10 @@ if __name__ == '__main__':
                                   help='List exposure types and exit. The results can be filtered by -es, --exposure-severity',
                                   action='store_true')
     l_exposures_group.add_argument('-les', '--list-exposure-summaries',
-                                   help='List exposures summaries and exit. Options are shown below.',
+                                   help='List exposures summaries and exit. The results can be filtered by the options shown below.',
                                    action='store_true')
     l_exposures_group.add_argument('-le', '--list-exposures',
-                                  help='List exposures and exit. Options are shown below.',
+                                  help='List exposures and exit. The results can be filtered by the options shown below.',
                                   action='store_true')
 
     l_exposure_options_group = lArgParser.add_argument_group(
@@ -253,10 +254,10 @@ if __name__ == '__main__':
                             action='store'
     )
     l_exposure_options_group.add_argument('-o', '--output-format',
-                            help='Output format. Required if -o, --output-format provided',
-                            required=('-let' in sys.argv or '--list-exposure-types' in sys.argv or '-le' in sys.argv or '--list-exposures' in sys.argv  or '-lbu' in sys.argv  or '--list-business-units' in sys.argv),
+                            help='Output format',
                             type=OutputFormat,
                             choices=list(OutputFormat),
+                            default=OutputFormat.CSV,
                             action='store'
     )
 

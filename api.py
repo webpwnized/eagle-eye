@@ -390,17 +390,18 @@ class API:
             self.__mPrinter.print("Fetched exposure types", Level.SUCCESS)
             self.__mPrinter.print("Parsing exposure types", Level.INFO)
             l_json = json.loads(l_http_response.text)
-            l_data: list = l_json["data"]
 
             if self.__m_output_format == OutputFormat.JSON.value:
                 if Parser.exposure_severity:
+                    l_data: list = l_json["data"]
                     for l_dict in l_data:
                         if l_dict['severity'] == Parser.exposure_severity.value:
                             print(l_dict)
                 else:
-                    print(l_data)
+                    print(l_json)
 
             elif self.__m_output_format == OutputFormat.CSV.value:
+                l_data: list = l_json["data"]
                 l_list: list = self.__parse_exposure_types(l_data)
                 for l_tuple in l_list:
                     print(','.join('{0}'.format(l) for l in l_tuple))
@@ -469,10 +470,14 @@ class API:
             self.__mPrinter.print("Parsing summary", Level.INFO)
 
             l_json = json.loads(l_http_response.text)
-            l_data: list = l_json["data"]
-            l_list: list = self.__parse_summarized_exposures(l_data)
-            for l_tuple in l_list:
-                print(', '.join('{0}'.format(l) for l in l_tuple))
+
+            if self.__m_output_format == OutputFormat.JSON.value:
+                print(l_json)
+            elif self.__m_output_format == OutputFormat.CSV.value:
+                l_data: list = l_json["data"]
+                l_list: list = self.__parse_summarized_exposures(l_data)
+                for l_tuple in l_list:
+                    print(','.join('{0}'.format(l) for l in l_tuple))
 
         except Exception as e:
             self.__mPrinter.print("summarize_exposed_ip_ports() - {0}".format(str(e)), Level.ERROR)
@@ -498,11 +503,11 @@ class API:
             self.__mPrinter.print("Parsing entities", Level.INFO)
 
             l_json = json.loads(l_http_response.text)
-            l_data: list = l_json["results"]
 
             if self.__m_output_format == OutputFormat.JSON.value:
-                print(l_data)
+                print(l_json)
             elif self.__m_output_format == OutputFormat.CSV.value:
+                l_data: list = l_json["results"]
                 l_list: list = self.__parse_entities(l_data)
                 for l_tuple in l_list:
                     print(','.join('{0}'.format(l) for l in l_tuple))
