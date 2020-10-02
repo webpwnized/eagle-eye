@@ -2,7 +2,7 @@
 
 from printer import Printer, Level, Force
 from argparser import Parser
-from api import API, OutputFormat, ExposureEventType, ExposureSeverity, ExposureActivityStatus, ExposureLastEventWindow
+from api import API, OutputFormat, ExposureEventType, ExposureSeverity, ExposureActivityStatus, ExposureLastEventWindow, IssueSeverity
 import config as __config
 
 from argparse import RawTextHelpFormatter
@@ -71,6 +71,11 @@ def print_example_usage():
     ----------------------------------------------------------------
     python3 eagle-eye.py -le -o CSV -et SERVER_SOFTWARE,APPLICATION_SERVER_SOFTWARE
 
+    --------------------------------
+    List issue types
+    --------------------------------
+    python3 eagle-eye.py -lit -o JSON
+    python3 eagle-eye.py -lit -o CSV
     """)
 
 def run_main_program():
@@ -95,7 +100,8 @@ def run_main_program():
         exit(0)
 
     if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types or Parser.list_exposures or \
-            Parser.list_exposure_summaries or Parser.list_business_units:
+            Parser.list_exposure_summaries or Parser.list_business_units or Parser.list_asset_entities or \
+            Parser.list_issue_types:
         l_api = API(p_parser=Parser)
     else:
         lArgParser.print_usage()
@@ -107,6 +113,10 @@ def run_main_program():
 
     if Parser.authenticate:
         l_api.test_authentication()
+        exit(0)
+
+    if Parser.list_asset_entities:
+        l_api.get_asset_entities()
         exit(0)
 
     if Parser.list_business_units:
@@ -123,6 +133,10 @@ def run_main_program():
 
     if Parser.list_exposures:
         l_api.get_exposures()
+        exit(0)
+
+    if Parser.list_issue_types:
+        l_api.list_issue_types()
         exit(0)
 
 if __name__ == '__main__':
@@ -145,6 +159,13 @@ if __name__ == '__main__':
     lArgParser.add_argument('-d', '--debug',
                             help='Show debug output',
                             action='store_true')
+    lArgParser.add_argument('-o', '--output-format',
+                            help='Output format',
+                            type=OutputFormat,
+                            choices=list(OutputFormat),
+                            default=OutputFormat.CSV,
+                            action='store'
+    )
 
     l_utilities_group = lArgParser.add_argument_group(title="Utilities", description=None)
     l_utilities_group.add_argument('-e', '--examples',
@@ -159,6 +180,45 @@ if __name__ == '__main__':
     l_utilities_group.add_argument('-a', '--authenticate',
                                   help='Exchange a refresh token for an access token and exit',
                                   action='store_true')
+
+    l_assets_group = lArgParser.add_argument_group(
+        title="Assets API Interface Endpoints",
+        description="Methods to interact with the Assets API")
+    l_assets_group.add_argument('-lae', '--list-asset-entities',
+                                  help='List asset entities and exit',
+                                  action='store_true')
+
+    l_asset_options_group = lArgParser.add_argument_group(
+        title="Assets API Interface Endpoint Options",
+        description="Arguments to methods that interact with the Assets API. Use these options with '-lae', '--list-asset-entities'")
+    l_asset_options_group.add_argument('-al', '--asset-limit',
+                            help='Page size in pagination',
+                            type=int,
+                            action='store'
+    )
+    l_asset_options_group.add_argument('-apt', '--asset-page-token',
+                            help='Page token for pagination',
+                            type=str,
+                            action='store'
+    )
+
+    l_issues_group = lArgParser.add_argument_group(
+        title="Issues API Interface Endpoints",
+        description="Methods to interact with the Issues API")
+    l_issues_group.add_argument('-lit', '--list-issue-types',
+                                  help='List issue types and exit. The results can be filtered by -is, --issue-severity',
+                                  action='store_true')
+
+    l_issues_options_group = lArgParser.add_argument_group(
+        title="Issues API Interface Endpoint Options",
+        description="Arguments to methods that interact with the Issues API.")
+    l_issues_options_group.add_argument('-is', '--issue-severity',
+                            help='Filter results by issue severity',
+                            type=IssueSeverity,
+                            choices=list(IssueSeverity),
+                            action='store'
+    )
+
 
     l_exposures_group = lArgParser.add_argument_group(
         title="Exposures API Interface Endpoints",
@@ -178,7 +238,7 @@ if __name__ == '__main__':
 
     l_exposure_options_group = lArgParser.add_argument_group(
         title="Exposures API Interface Endpoint Options",
-        description="Arguments to methods that interact with the Exposures and Summaries API. Use these options with '-le', '--list-exposures'")
+        description="Arguments to methods that interact with the Exposures and Summaries API. Use these options with '-le', '--list-exposures', '-les', '--list-exposure-summaries'")
     l_exposure_options_group.add_argument('-el', '--exposure-limit',
                             help='How many items to return at one time (default 100, max 10,000). Note that this parameter will be ignored when requesting CSV data.',
                             type=int,
@@ -222,7 +282,7 @@ if __name__ == '__main__':
                             action='store'
     )
     l_exposure_options_group.add_argument('-es', '--exposure-severity',
-                            help='Filter results by exposure event type',
+                            help='Filter results by exposure severity',
                             type=ExposureSeverity,
                             choices=list(ExposureSeverity),
                             action='store'
@@ -251,13 +311,6 @@ if __name__ == '__main__':
     l_exposure_options_group.add_argument('-esort', '--exposure-sort',
                             help='Comma-separated string; orders results by the given fields. If the field name is prefixed by a -, then the ordering will be descending for that field. Use a dotted notation to order by fields that are nested. This values which can be used in this parameter should be retrieved from /configurations/exposures.',
                             type=str,
-                            action='store'
-    )
-    l_exposure_options_group.add_argument('-o', '--output-format',
-                            help='Output format',
-                            type=OutputFormat,
-                            choices=list(OutputFormat),
-                            default=OutputFormat.CSV,
                             action='store'
     )
 

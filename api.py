@@ -63,6 +63,15 @@ class ExposureEventType(Enum):
         return self.value
 
 
+class IssueSeverity(Enum):
+    ROUTINE = 'ROUTINE'
+    WARNING = 'WARNING'
+    CRITICAL = 'CRITICAL'
+
+    def __str__(self):
+        return self.value
+
+
 class AcceptHeader(Enum):
     JSON = 'JSON'
     CSV = 'CSV'
@@ -86,11 +95,13 @@ class API:
 
     __cID_TOKEN_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "IdToken/")
     __cENTITY_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "Entity/")
+    __cASSETS_ENTITY_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "assets/entities")
 
     __cASSETS_IP_RANGE_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "ip-range")
     __cEXPOSURE_TYPES_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "configurations/exposures/")
     __cEXPOSURES_IP_PORTS_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "exposures/ip-ports")
     __cSUMMARIES_IP_PORTS_COUNTS_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "summaries/ip-ports/counts")
+    __cISSUE_TYPES_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issueTypes")
 
     __m_verbose: bool = False
     __m_debug: bool = False
@@ -459,7 +470,7 @@ class API:
         try:
             self.__mPrinter.print("Collecting summary", Level.INFO)
 
-            l_base_url = "{0}?businessUnit={1}&tag={2}&inet={3}&content={4}&activityStatus={5}&lastEventTime={6}&lastEventWindow={7}&eventType={8}&exposureType={9}&severity={10}&portNumber={11}&".format(
+            l_base_url = "{0}?businessUnit={1}&tag={2}&inet={3}&content={4}&activityStatus={5}&lastEventTime={6}&lastEventWindow={7}&eventType={8}&exposureType={9}&severity={10}&portNumber={11}".format(
                 self.__cSUMMARIES_IP_PORTS_COUNTS_URL,
                 Parser.exposure_business_unit, Parser.exposure_tag, Parser.exposure_inet, Parser.exposure_content,
                 Parser.exposure_activity_status, Parser.exposure_last_event_time, Parser.exposure_last_event_window, Parser.exposure_event_type,
@@ -514,3 +525,51 @@ class API:
 
         except Exception as e:
             self.__mPrinter.print("get_entities() - {0}".format(str(e)), Level.ERROR)
+
+    def get_asset_entities(self) -> None:
+        try:
+            self.__mPrinter.print("Collecting assets", Level.INFO)
+
+            l_base_url = "{0}?limit={1}".format(self.__cASSETS_ENTITY_URL, Parser.asset_limit)
+            if Parser.asset_page_token:
+                l_base_url = "{0}&pageToken={1}".format(l_base_url, Parser.asset_page_token)
+
+            l_http_response = self.__connect_to_api(l_base_url)
+            self.__mPrinter.print("Collected assets", Level.SUCCESS)
+            self.__mPrinter.print("Parsing assets", Level.INFO)
+
+            l_json = json.loads(l_http_response.text)
+            l_url = l_json['pagination']['next']
+            self.get_asset_entities()
+
+
+
+            if self.__m_output_format == OutputFormat.JSON.value:
+                print(l_json)
+            elif self.__m_output_format == OutputFormat.CSV.value:
+                l_data: list = l_json["data"]
+                l_list: list = self.__parse_summarized_exposures(l_data)
+                for l_tuple in l_list:
+                    print(','.join('{0}'.format(l) for l in l_tuple))
+
+        except Exception as e:
+            self.__mPrinter.print("get_asset_entities() - {0}".format(str(e)), Level.ERROR)
+
+    def list_issue_types(self) -> None:
+        try:
+            self.__mPrinter.print("Fetching issue types", Level.INFO)
+            l_http_response = self.__connect_to_api(self.__cISSUE_TYPES_URL)
+            self.__mPrinter.print("Fetched issue types", Level.SUCCESS)
+            self.__mPrinter.print("Parsing issue types", Level.INFO)
+            l_json = json.loads(l_http_response.text)
+            l_data: list = l_json["data"]
+
+            if self.__m_output_format == OutputFormat.JSON.value:
+                print(l_json)
+
+            elif self.__m_output_format == OutputFormat.CSV.value:
+                for l_dict in l_data:
+                    print(",".join(l_dict.values()))
+
+        except Exception as e:
+            self.__mPrinter.print("list_issue_types() - {0}".format(str(e)), Level.ERROR)

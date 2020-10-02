@@ -49,6 +49,9 @@ class Parser:
         Parser.show_usage = p_args.usage
         Parser.test_connectivity = p_args.test
         Parser.authenticate = p_args.authenticate
+        Parser.list_asset_entities = p_args.list_asset_entities
+        Parser.asset_limit = p_args.asset_limit or ""
+        Parser.asset_page_token = p_args.asset_page_token or ""
         Parser.list_business_units = p_args.list_business_units
         Parser.list_exposure_types = p_args.list_exposure_types
         Parser.list_exposures = p_args.list_exposures
@@ -67,4 +70,6 @@ class Parser:
         Parser.exposure_business_unit = p_args.exposure_business_unit or ""
         Parser.exposure_port_number = p_args.exposure_port_number or ""
         Parser.exposure_sort = p_args.exposure_sort or ""
+        Parser.list_issue_types = p_args.list_issue_types
+        Parser.issue_severity = p_args.issue_severity or ""
         Parser.output_format = p_args.output_format.value.upper() if hasattr(p_args.output_format, 'value') else None
