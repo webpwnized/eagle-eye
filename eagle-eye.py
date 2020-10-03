@@ -101,7 +101,7 @@ def run_main_program():
 
     if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types or Parser.list_exposures or \
             Parser.list_exposure_summaries or Parser.list_business_units or Parser.list_asset_entities or \
-            Parser.list_issue_types:
+            Parser.list_issue_types or Parser.get_issues_count:
         l_api = API(p_parser=Parser)
     else:
         lArgParser.print_usage()
@@ -137,6 +137,10 @@ def run_main_program():
 
     if Parser.list_issue_types:
         l_api.list_issue_types()
+        exit(0)
+
+    if Parser.get_issues_count:
+        l_api.get_issues_count()
         exit(0)
 
 if __name__ == '__main__':
@@ -206,19 +210,115 @@ if __name__ == '__main__':
         title="Issues API Interface Endpoints",
         description="Methods to interact with the Issues API")
     l_issues_group.add_argument('-lit', '--list-issue-types',
-                                  help='List issue types and exit. The results can be filtered by -is, --issue-severity',
+                                  help='List issue types and exit',
+                                  action='store_true')
+    l_issues_group.add_argument('-gic', '--get-issues-count',
+                                  help='Get a count of issues. Returns the total count of issues matching the provided filters, up to 10K.',
                                   action='store_true')
 
     l_issues_options_group = lArgParser.add_argument_group(
         title="Issues API Interface Endpoint Options",
         description="Arguments to methods that interact with the Issues API.")
-    l_issues_options_group.add_argument('-is', '--issue-severity',
-                            help='Filter results by issue severity',
-                            type=IssueSeverity,
-                            choices=list(IssueSeverity),
+    l_issues_options_group.add_argument('-ics', '--issue-content-search',
+                            help='Returns only results whose contents match the given query',
+                            type=str,
                             action='store'
     )
-
+    l_issues_options_group.add_argument('-ipid', '--issue-provider-id',
+                            help='Comma-separated string; Returns only results that were found on the given providers.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ipname', '--issue-provider-name',
+                            help='Comma-separated string; Returns only results that were found on the given providers.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ibu', '--issue-business-unit',
+                            help='Comma-separated string; Returns only results with a business unit whose ID falls in the provided list.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ibn', '--issue-business-unit-name',
+                            help='Comma-separated string; Returns only results with a business unit whose name falls in the provided list.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-iau', '--issue-assignee-username',
+                            help='Comma-separated string; Returns only results whose assignees username matches one of the given usernames. Use "Unassigned" to fetch issues that are not assigned to any user.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-itid', '--issue-type-id',
+                            help='Comma-separated string; Returns only results whose issue type ID matches one of the given types.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-itn', '--issue-type-name',
+                            help='Comma-separated string; Returns only results whose issue type name matches one of the given types.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-iis', '--issue-inet-search',
+                            help='Search for results in a given IP/CIDR block using a single IP (d.d.d.d), a dashed IP range (d.d.d.d-d.d.d.d), a CIDR block (d.d.d.d/m), a partial CIDR (d.d.), or a wildcard (d.d.*.d). Returns results whose identifier includes an IP matching the query.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ids', '--issue-domain-search',
+                            help='Search for a a given domain value via substring match. Returns results whose identifier includes a domain matching the query.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ipn', '--issue-port-number',
+                            help='Comma-separated string; Returns only results whose identifier includes one of the given port numbers.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ips', '--issue-progress-status',
+                            help='Comma-separated string; Returns only results whose progress status matches one of the given values.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ias', '--issue-activity-status',
+                            help='Comma-separated string; Returns only results whose activity status matches one of the given values.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ip', '--issue-priority',
+                            help='Comma-separated string; Returns only results whose priority matches one of the given values.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-itagid', '--issue-tag-id',
+                            help='Comma-separated string; Returns only results that are associated with the provided tag IDs.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-itname', '--issue-tag-name',
+                            help='Comma-separated string; Returns only results that are associated with the provided tag names.',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ica', '--issue-created-after',
+                            help='Returns only results created after the provided timestamp (YYYY-MM-DDTHH:MM:SSZ).',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-icb', '--issue-created-before',
+                            help='Returns only results created before the provided timestamp (YYYY-MM-DDTHH:MM:SSZ).',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ima', '--issue-modified-after',
+                            help='Returns only results modified after the provided timestamp (YYYY-MM-DDTHH:MM:SSZ).',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-imb', '--issue-modified-before',
+                            help='Returns only results modified before the provided timestamp (YYYY-MM-DDTHH:MM:SSZ).',
+                            type=str,
+                            action='store'
+    )
 
     l_exposures_group = lArgParser.add_argument_group(
         title="Exposures API Interface Endpoints",

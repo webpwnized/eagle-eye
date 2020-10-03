@@ -70,6 +70,31 @@ class Parser:
         Parser.exposure_business_unit = p_args.exposure_business_unit or ""
         Parser.exposure_port_number = p_args.exposure_port_number or ""
         Parser.exposure_sort = p_args.exposure_sort or ""
+
+        # Issues Methods
         Parser.list_issue_types = p_args.list_issue_types
-        Parser.issue_severity = p_args.issue_severity or ""
+        Parser.get_issues_count = p_args.get_issues_count
+
+        # Issues Methods Options
+        Parser.issue_content_search = p_args.issue_content_search or ""
+        Parser.issue_provider_id = p_args.issue_provider_id or ""
+        Parser.issue_provider_name = p_args.issue_provider_name or ""
+        Parser.issue_business_unit = p_args.issue_business_unit or ""
+        Parser.issue_business_unit_name = p_args.issue_business_unit_name or ""
+        Parser.issue_assignee_username = p_args.issue_assignee_username or ""
+        Parser.issue_type_id = p_args.issue_type_id or ""
+        Parser.issue_type_name = p_args.issue_type_name or ""
+        Parser.issue_inet_search = p_args.issue_inet_search or ""
+        Parser.issue_domain_search = p_args.issue_domain_search or ""
+        Parser.issue_port_number = p_args.issue_port_number or ""
+        Parser.issue_progress_status = p_args.issue_progress_status or ""
+        Parser.issue_activity_status = p_args.issue_activity_status or ""
+        Parser.issue_priority = p_args.issue_priority or ""
+        Parser.issue_tag_id = p_args.issue_tag_id or ""
+        Parser.issue_tag_name = p_args.issue_tag_name or ""
+        Parser.issue_created_after = p_args.issue_created_after or ""
+        Parser.issue_created_before = p_args.issue_created_before or ""
+        Parser.issue_modified_after = p_args.issue_modified_after or ""
+        Parser.issue_modified_before = p_args.issue_modified_before or ""
+
         Parser.output_format = p_args.output_format.value.upper() if hasattr(p_args.output_format, 'value') else None
