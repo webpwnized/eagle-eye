@@ -226,12 +226,12 @@ if __name__ == '__main__':
     l_issues_options_group = lArgParser.add_argument_group(
         title="Issues API Interface Endpoint Options",
         description="Arguments to methods that interact with the Issues API.")
-    l_issues_options_group.add_argument('-il', '--issue_limit',
+    l_issues_options_group.add_argument('-il', '--issue-limit',
                             help='Returns at most this many results in a single api call (default: 100, max: 10,000).',
                             type=str,
                             action='store'
     )
-    l_issues_options_group.add_argument('-ipt', '--issue_page_token',
+    l_issues_options_group.add_argument('-ipt', '--issue-page-token',
                             help='Page token for pagination',
                             type=str,
                             action='store'
@@ -338,6 +338,11 @@ if __name__ == '__main__':
     )
     l_issues_options_group.add_argument('-isort', '--issue_sort',
                             help='Sort by specified properties',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-icf', '--issue-csv-filename',
+                            help='The name of the returned CSV file',
                             type=str,
                             action='store'
     )

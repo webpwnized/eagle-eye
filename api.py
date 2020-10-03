@@ -3,6 +3,7 @@ from argparser import Parser
 from enum import Enum
 from database import SQLite
 
+import re
 import json
 import getpass
 import requests
@@ -105,7 +106,8 @@ class API:
     #Issues
     __cISSUES_ISSUE_TYPES_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issueTypes")
     __cISSUES_ISSUES_COUNT:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues/count")
-    __cISSUES_ISSUES:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues")
+    __cISSUES_ISSUES_JSON:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues")
+    __cISSUES_ISSUES_CSV:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues/csv")
 
     __m_verbose: bool = False
     __m_debug: bool = False
@@ -352,6 +354,16 @@ class API:
             return l_proxy_handlers
         except Exception as e:
             self.__mPrinter.print("__get_proxies() - {0}".format(str(e)), Level.ERROR)
+
+    def __get_filename_from_content_disposition(self, l_http_response):
+
+        l_content_disposition = l_http_response.headers.get('content-disposition')
+        if not l_content_disposition:
+            return None
+        l_filename = re.findall('filename=(.+)', l_content_disposition)
+        if not l_filename:
+            return None
+        return l_filename[0]
 
     # ---------------------------------
     # public instance methods
@@ -605,28 +617,37 @@ class API:
         except Exception as e:
             self.__mPrinter.print("get_issues_count() - {0}".format(str(e)), Level.ERROR)
 
-    def get_next_page(self, l_next_page: str) -> None:
+    def __get_next_page(self, l_next_page: str) -> None:
         try:
             l_http_response = self.__connect_to_api(l_next_page)
             l_json = json.loads(l_http_response.text)
             print(l_json["data"])
             l_next_page = l_json["pagination"]["next"]
             if l_next_page:
-                self.get_next_page(l_next_page)
+                self.__get_next_page(l_next_page)
 
         except Exception as e:
             self.__mPrinter.print("get_next_page() - {0}".format(str(e)), Level.ERROR)
 
     def get_issues(self) -> None:
+        l_url: str = ""
+        l_filename: str = ""
+
         try:
+            self.__m_accept_header = Parser.output_format
             self.__mPrinter.print("Fetching issues", Level.INFO)
+
+            if self.__m_output_format == OutputFormat.JSON.value:
+                l_url = self.__cISSUES_ISSUES_JSON
+            elif self.__m_output_format == OutputFormat.CSV.value:
+                l_url = self.__cISSUES_ISSUES_CSV
 
             l_base_url = "{0}?limit={1}&contentSearch={2}&providerId={3}&providerName={4}&" \
                          "businessUnitId={5}&businessUnitName={6}&assigneeUsername={7}&issueTypeId={8}&issueTypeName={9}&" \
                          "inetSearch={10}&domainSearch={11}&portNumber={12}&progressStatus={13}&activityStatus={14}&" \
                          "priority={15}&tagId={16}&tagName={17}&createdAfter={18}&createdBefore={19}&" \
                          "modifiedAfter={20}&modifiedBefore={21}&sort={22}".format(
-                self.__cISSUES_ISSUES,
+                l_url,
                 Parser.issue_limit, Parser.issue_content_search, Parser.issue_provider_id, Parser.issue_provider_name,
                 Parser.issue_business_unit, Parser.issue_business_unit_name, Parser.issue_assignee_username, Parser.issue_type_id, Parser.issue_type_name,
                 Parser.issue_inet_search, Parser.issue_domain_search, Parser.issue_port_number, Parser.issue_progress_status, Parser.issue_activity_status,
@@ -640,12 +661,18 @@ class API:
             l_http_response = self.__connect_to_api(l_base_url)
             self.__mPrinter.print("Fetched issues", Level.SUCCESS)
             self.__mPrinter.print("Parsing issues", Level.INFO)
-            l_json = json.loads(l_http_response.text)
 
-            print(l_json["data"])
-            l_next_page = l_json["pagination"]["next"]
-            if l_next_page:
-                self.get_next_page(l_next_page)
+            if self.__m_output_format == OutputFormat.JSON.value:
+                l_json = json.loads(l_http_response.text)
+                print(l_json["data"])
+                l_next_page = l_json["pagination"]["next"]
+                if l_next_page:
+                    self.__get_next_page(l_next_page)
+            elif self.__m_output_format == OutputFormat.CSV.value:
+                l_filename = Parser.issue_csv_filename if Parser.issue_csv_filename else self.__get_filename_from_content_disposition(l_http_response)
+                self.__mPrinter.print("Writing issues to file {}".format(l_filename), Level.INFO)
+                open(l_filename, 'w').write(l_http_response.text)
+                self.__mPrinter.print("Wrote issues to file {}".format(l_filename), Level.SUCCESS)
 
         except Exception as e:
             self.__mPrinter.print("get_issues() - {0}".format(str(e)), Level.ERROR)

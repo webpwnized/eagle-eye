@@ -100,5 +100,6 @@ class Parser:
         Parser.issue_modified_after = p_args.issue_modified_after or ""
         Parser.issue_modified_before = p_args.issue_modified_before or ""
         Parser.issue_sort = p_args.issue_sort or ""
+        Parser.issue_csv_filename = p_args.issue_csv_filename or ""
 
         Parser.output_format = p_args.output_format.value.upper() if hasattr(p_args.output_format, 'value') else None
