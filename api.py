@@ -101,8 +101,11 @@ class API:
     __cEXPOSURE_TYPES_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "configurations/exposures/")
     __cEXPOSURES_IP_PORTS_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "exposures/ip-ports")
     __cSUMMARIES_IP_PORTS_COUNTS_URL: str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_2_URL, "summaries/ip-ports/counts")
+
+    #Issues
     __cISSUES_ISSUE_TYPES_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issueTypes")
     __cISSUES_ISSUES_COUNT:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues/count")
+    __cISSUES_ISSUES:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues")
 
     __m_verbose: bool = False
     __m_debug: bool = False
@@ -593,7 +596,58 @@ class API:
             self.__mPrinter.print("Parsing issues count", Level.INFO)
             l_json = json.loads(l_http_response.text)
 
-            print(l_json)
+            if self.__m_output_format == OutputFormat.JSON.value:
+                print(l_json)
+            elif self.__m_output_format == OutputFormat.CSV.value:
+                print("Overflow, Count")
+                print("{0}, {1}".format(l_json["overflow"], l_json["count"]))
 
         except Exception as e:
             self.__mPrinter.print("get_issues_count() - {0}".format(str(e)), Level.ERROR)
+
+    def get_next_page(self, l_next_page: str) -> None:
+        try:
+            l_http_response = self.__connect_to_api(l_next_page)
+            l_json = json.loads(l_http_response.text)
+            print(l_json["data"])
+            l_next_page = l_json["pagination"]["next"]
+            if l_next_page:
+                self.get_next_page(l_next_page)
+
+        except Exception as e:
+            self.__mPrinter.print("get_next_page() - {0}".format(str(e)), Level.ERROR)
+
+    def get_issues(self) -> None:
+        try:
+            self.__mPrinter.print("Fetching issues", Level.INFO)
+
+            l_base_url = "{0}?limit={1}&contentSearch={2}&providerId={3}&providerName={4}&" \
+                         "businessUnitId={5}&businessUnitName={6}&assigneeUsername={7}&issueTypeId={8}&issueTypeName={9}&" \
+                         "inetSearch={10}&domainSearch={11}&portNumber={12}&progressStatus={13}&activityStatus={14}&" \
+                         "priority={15}&tagId={16}&tagName={17}&createdAfter={18}&createdBefore={19}&" \
+                         "modifiedAfter={20}&modifiedBefore={21}&sort={22}".format(
+                self.__cISSUES_ISSUES,
+                Parser.issue_limit, Parser.issue_content_search, Parser.issue_provider_id, Parser.issue_provider_name,
+                Parser.issue_business_unit, Parser.issue_business_unit_name, Parser.issue_assignee_username, Parser.issue_type_id, Parser.issue_type_name,
+                Parser.issue_inet_search, Parser.issue_domain_search, Parser.issue_port_number, Parser.issue_progress_status, Parser.issue_activity_status,
+                Parser.issue_priority, Parser.issue_tag_id, Parser.issue_tag_name, Parser.issue_created_after, Parser.issue_created_before,
+                Parser.issue_modified_after, Parser.issue_modified_before, Parser.issue_sort
+            )
+
+            if Parser.issue_page_token:
+                l_base_url = "{0}{1}{2}".format(l_base_url, "&pageToken=", Parser.issue_page_token)
+
+            l_http_response = self.__connect_to_api(l_base_url)
+            self.__mPrinter.print("Fetched issues", Level.SUCCESS)
+            self.__mPrinter.print("Parsing issues", Level.INFO)
+            l_json = json.loads(l_http_response.text)
+
+            print(l_json["data"])
+            l_next_page = l_json["pagination"]["next"]
+            if l_next_page:
+                self.get_next_page(l_next_page)
+
+        except Exception as e:
+            self.__mPrinter.print("get_issues() - {0}".format(str(e)), Level.ERROR)
+
+

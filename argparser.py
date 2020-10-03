@@ -74,8 +74,11 @@ class Parser:
         # Issues Methods
         Parser.list_issue_types = p_args.list_issue_types
         Parser.get_issues_count = p_args.get_issues_count
+        Parser.get_issues = p_args.get_issues
 
         # Issues Methods Options
+        Parser.issue_limit = p_args.issue_limit or ""
+        Parser.issue_page_token = p_args.issue_page_token or ""
         Parser.issue_content_search = p_args.issue_content_search or ""
         Parser.issue_provider_id = p_args.issue_provider_id or ""
         Parser.issue_provider_name = p_args.issue_provider_name or ""
@@ -96,5 +99,6 @@ class Parser:
         Parser.issue_created_before = p_args.issue_created_before or ""
         Parser.issue_modified_after = p_args.issue_modified_after or ""
         Parser.issue_modified_before = p_args.issue_modified_before or ""
+        Parser.issue_sort = p_args.issue_sort or ""
 
         Parser.output_format = p_args.output_format.value.upper() if hasattr(p_args.output_format, 'value') else None

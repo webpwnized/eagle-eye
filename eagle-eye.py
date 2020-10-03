@@ -101,7 +101,7 @@ def run_main_program():
 
     if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types or Parser.list_exposures or \
             Parser.list_exposure_summaries or Parser.list_business_units or Parser.list_asset_entities or \
-            Parser.list_issue_types or Parser.get_issues_count:
+            Parser.list_issue_types or Parser.get_issues_count or Parser.get_issues:
         l_api = API(p_parser=Parser)
     else:
         lArgParser.print_usage()
@@ -141,6 +141,10 @@ def run_main_program():
 
     if Parser.get_issues_count:
         l_api.get_issues_count()
+        exit(0)
+
+    if Parser.get_issues:
+        l_api.get_issues()
         exit(0)
 
 if __name__ == '__main__':
@@ -215,10 +219,23 @@ if __name__ == '__main__':
     l_issues_group.add_argument('-gic', '--get-issues-count',
                                   help='Get a count of issues. Returns the total count of issues matching the provided filters, up to 10K.',
                                   action='store_true')
+    l_issues_group.add_argument('-gi', '--get-issues',
+                                  help='Get a paginated list of issues.',
+                                  action='store_true')
 
     l_issues_options_group = lArgParser.add_argument_group(
         title="Issues API Interface Endpoint Options",
         description="Arguments to methods that interact with the Issues API.")
+    l_issues_options_group.add_argument('-il', '--issue_limit',
+                            help='Returns at most this many results in a single api call (default: 100, max: 10,000).',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-ipt', '--issue_page_token',
+                            help='Page token for pagination',
+                            type=str,
+                            action='store'
+    )
     l_issues_options_group.add_argument('-ics', '--issue-content-search',
                             help='Returns only results whose contents match the given query',
                             type=str,
@@ -316,6 +333,11 @@ if __name__ == '__main__':
     )
     l_issues_options_group.add_argument('-imb', '--issue-modified-before',
                             help='Returns only results modified before the provided timestamp (YYYY-MM-DDTHH:MM:SSZ).',
+                            type=str,
+                            action='store'
+    )
+    l_issues_options_group.add_argument('-isort', '--issue_sort',
+                            help='Sort by specified properties',
                             type=str,
                             action='store'
     )
