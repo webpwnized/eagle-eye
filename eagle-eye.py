@@ -2,7 +2,7 @@
 
 from printer import Printer, Level, Force
 from argparser import Parser
-from api import API, OutputFormat, ExposureEventType, ExposureSeverity, ExposureActivityStatus, ExposureLastEventWindow, IssueSeverity
+from api import API, OutputFormat, ExposureEventType, ExposureSeverity, ExposureActivityStatus, ExposureLastEventWindow, IssuePriority, IssueActivityStatus, IssueProgressStatus, IssueSortableFields
 import config as __config
 
 from argparse import RawTextHelpFormatter
@@ -76,6 +76,24 @@ def print_example_usage():
     --------------------------------
     python3 eagle-eye.py -lit -o JSON
     python3 eagle-eye.py -lit -o CSV
+    
+    --------------------------------
+    Get issue count
+    --------------------------------
+    python3 eagle-eye.py -gic -ibu ebbd0ef3-ed86-4020-b7c8-a55aa73efe60 -ip Critical,High,Medium,Low -ias Active -o JSON
+    python3 eagle-eye.py -gic -ibu ebbd0ef3-ed86-4020-b7c8-a55aa73efe60 -ip Critical,High,Medium,Low -ias Active -o CSV
+    
+    --------------------------------
+    Get issues
+    --------------------------------
+    python3 eagle-eye.py -gi -ibu ebbd0ef3-ed86-4020-b7c8-a55aa73efe60 -ip Critical,High,Medium,Low -ias Active -o JSON
+    python3 eagle-eye.py -gi -ibu ebbd0ef3-ed86-4020-b7c8-a55aa73efe60 -ip Critical,High,Medium,Low -ias Active -o CSV
+    
+    --------------------------------
+    Get issue
+    --------------------------------
+    python3 eagle-eye.py -gissue -iid 3df7a930-3ec3-3a61-804c-c4e28fce972f -o JSON
+    python3 eagle-eye.py -gissue -iid 3df7a930-3ec3-3a61-804c-c4e28fce972f -o CSV
     """)
 
 def run_main_program():
@@ -192,6 +210,9 @@ if __name__ == '__main__':
     l_utilities_group.add_argument('-a', '--authenticate',
                                   help='Exchange a refresh token for an access token and exit',
                                   action='store_true')
+    l_utilities_group.add_argument('-lbu', '--list-business-units',
+                                  help='List business units and exit',
+                                  action='store_true')
 
     l_assets_group = lArgParser.add_argument_group(
         title="Assets API Interface Endpoints",
@@ -214,6 +235,7 @@ if __name__ == '__main__':
                             action='store'
     )
 
+    # Issues Enpoints
     l_issues_group = lArgParser.add_argument_group(
         title="Issues API Interface Endpoints",
         description="Methods to interact with the Issues API")
@@ -230,6 +252,7 @@ if __name__ == '__main__':
                                   help='Get details about an issue',
                                   action='store_true')
 
+    # Issues Options
     l_issues_options_group = lArgParser.add_argument_group(
         title="Issues API Interface Endpoint Options",
         description="Arguments to methods that interact with the Issues API.")
@@ -304,17 +327,17 @@ if __name__ == '__main__':
                             action='store'
     )
     l_issues_options_group.add_argument('-ips', '--issue-progress-status',
-                            help='Comma-separated string; Returns only results whose progress status matches one of the given values.',
+                            help='Comma-separated string; Returns only results whose progress status matches one of the given values. {}'.format([i.value for i in IssueProgressStatus]),
                             type=str,
                             action='store'
     )
     l_issues_options_group.add_argument('-ias', '--issue-activity-status',
-                            help='Comma-separated string; Returns only results whose activity status matches one of the given values.',
+                            help='Comma-separated string; Returns only results whose activity status matches one of the given values. {}'.format([i.value for i in IssueActivityStatus]),
                             type=str,
                             action='store'
     )
     l_issues_options_group.add_argument('-ip', '--issue-priority',
-                            help='Comma-separated string; Returns only results whose priority matches one of the given values.',
+                            help='Comma-separated string; Returns only results whose priority matches one of the given values. {}'.format([i.value for i in IssuePriority]),
                             type=str,
                             action='store'
     )
@@ -349,7 +372,7 @@ if __name__ == '__main__':
                             action='store'
     )
     l_issues_options_group.add_argument('-isort', '--issue_sort',
-                            help='Sort by specified properties',
+                            help='Sort by specified properties. {}'.format([i.value for i in IssueSortableFields]),
                             type=str,
                             action='store'
     )
@@ -359,12 +382,10 @@ if __name__ == '__main__':
                             action='store'
     )
 
+    # Exposure Enpoints
     l_exposures_group = lArgParser.add_argument_group(
         title="Exposures API Interface Endpoints",
         description="Methods to interact with the Exposures API")
-    l_exposures_group.add_argument('-lbu', '--list-business-units',
-                                  help='List business units and exit',
-                                  action='store_true')
     l_exposures_group.add_argument('-let', '--list-exposure-types',
                                   help='List exposure types and exit. The results can be filtered by -es, --exposure-severity',
                                   action='store_true')
@@ -375,6 +396,7 @@ if __name__ == '__main__':
                                   help='List exposures and exit. The results can be filtered by the options shown below.',
                                   action='store_true')
 
+    # Exposure Options
     l_exposure_options_group = lArgParser.add_argument_group(
         title="Exposures API Interface Endpoint Options",
         description="Arguments to methods that interact with the Exposures and Summaries API. Use these options with '-le', '--list-exposures', '-les', '--list-exposure-summaries'")

@@ -65,14 +65,51 @@ class ExposureEventType(Enum):
         return self.value
 
 
-class IssueSeverity(Enum):
-    ROUTINE = 'ROUTINE'
-    WARNING = 'WARNING'
-    CRITICAL = 'CRITICAL'
+class IssueProgressStatus(Enum):
+    NEW = 'New'
+    INVESTIGATING = 'Investigating'
+    INPROGRESS = 'InProgress'
 
     def __str__(self):
         return self.value
 
+
+class IssuePriority(Enum):
+    CRITICAL = 'Critical'
+    HIGH = 'High'
+    MEDIUM = 'Medium'
+    LOW = 'Low'
+
+    def __str__(self):
+        return self.value
+
+
+class IssueActivityStatus(Enum):
+    ACTIVE = 'Active'
+    INACTIVE = 'Inactive'
+
+    def __str__(self):
+        return self.value
+
+
+class IssueSortableFields(Enum):
+    CREATED = "created"
+    CREATED_DESC = "-created"
+    MODIFIED = "modified"
+    MODIFIED_DESC = "-modified"
+    ASSIGNEE_USERNAME = "assigneeUsername"
+    ASSIGNEE_USERNAME_DESC = "-assigneeUsername"
+    PRIORITY = "priority"
+    PRIORITY_DESC = "-priority"
+    PROGRESS_STATUS = "progressStatus"
+    PROGRESS_STATUS_DESC = "-progressStatus"
+    ACTIVITY_STATUS = "activityStatus"
+    ACTIVITY_STATUS_DESC = "-activityStatus"
+    HEADLINE = "headline"
+    HEADLINE_DESC = "-headline"
+
+    def __str__(self):
+        return self.value
 
 class AcceptHeader(Enum):
     JSON = 'JSON'
