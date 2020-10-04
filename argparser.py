@@ -75,8 +75,10 @@ class Parser:
         Parser.list_issue_types = p_args.list_issue_types
         Parser.get_issues_count = p_args.get_issues_count
         Parser.get_issues = p_args.get_issues
+        Parser.get_issue = p_args.get_issue
 
         # Issues Methods Options
+        Parser.issue_id = p_args.issue_id or ""
         Parser.issue_limit = p_args.issue_limit or ""
         Parser.issue_page_token = p_args.issue_page_token or ""
         Parser.issue_content_search = p_args.issue_content_search or ""

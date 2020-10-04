@@ -10,7 +10,7 @@ import argparse
 import sys
 
 
-l_version = '0.0.11 beta'
+l_version = '0.0.14 beta'
 
 
 def print_example_usage():
@@ -101,7 +101,7 @@ def run_main_program():
 
     if Parser.test_connectivity or Parser.authenticate or Parser.list_exposure_types or Parser.list_exposures or \
             Parser.list_exposure_summaries or Parser.list_business_units or Parser.list_asset_entities or \
-            Parser.list_issue_types or Parser.get_issues_count or Parser.get_issues:
+            Parser.list_issue_types or Parser.get_issues_count or Parser.get_issues or Parser.get_issue:
         l_api = API(p_parser=Parser)
     else:
         lArgParser.print_usage()
@@ -145,6 +145,10 @@ def run_main_program():
 
     if Parser.get_issues:
         l_api.get_issues()
+        exit(0)
+
+    if Parser.get_issue:
+        l_api.get_issue()
         exit(0)
 
 if __name__ == '__main__':
@@ -222,10 +226,18 @@ if __name__ == '__main__':
     l_issues_group.add_argument('-gi', '--get-issues',
                                   help='Get a paginated list of issues.',
                                   action='store_true')
+    l_issues_group.add_argument('-gissue', '--get-issue',
+                                  help='Get details about an issue',
+                                  action='store_true')
 
     l_issues_options_group = lArgParser.add_argument_group(
         title="Issues API Interface Endpoint Options",
         description="Arguments to methods that interact with the Issues API.")
+    l_issues_options_group.add_argument('-iid', '--issue-id',
+                            help='ID of the issue',
+                            type=str,
+                            action='store'
+    )
     l_issues_options_group.add_argument('-il', '--issue-limit',
                             help='Returns at most this many results in a single api call (default: 100, max: 10,000).',
                             type=str,

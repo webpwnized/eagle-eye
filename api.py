@@ -2,6 +2,7 @@ from printer import Printer, Level
 from argparser import Parser
 from enum import Enum
 from database import SQLite
+from urllib import parse
 
 import re
 import json
@@ -106,6 +107,7 @@ class API:
     #Issues
     __cISSUES_ISSUE_TYPES_URL:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issueTypes")
     __cISSUES_ISSUES_COUNT:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues/count")
+    __cISSUES_ISSUES:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues")
     __cISSUES_ISSUES_JSON:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues")
     __cISSUES_ISSUES_CSV:  str = "{}{}{}".format(__cBASE_URL, __cAPI_VERSION_1_URL, "issues/issues/csv")
 
@@ -677,4 +679,56 @@ class API:
         except Exception as e:
             self.__mPrinter.print("get_issues() - {0}".format(str(e)), Level.ERROR)
 
+    def __parse_issue(self, l_data: list) -> list:
+        l_list: list = []
+        try:
+            l_header = ("Business Unit", "IP", "Port", "Protocol", "Domain", "Issue Type", "Category", "Priority", "Issue", "Text", "Issue Type ID")
 
+            l_business_unit: str = l_data["businessUnits"][0]["name"]
+            i_ip: str = l_data["ip"]
+            l_port: str = l_data["portNumber"]
+            l_protocol: str = l_data["portProtocol"]
+            l_domain: str = l_data["domain"]
+            l_issue_type: str = l_data["issueType"]["name"]
+            l_category: str = l_data["category"]
+            l_priority: str = l_data["priority"]
+            l_headline: str = l_data["headline"]
+            l_text: str = l_data["helpText"]
+            l_issue_type_id: str = l_data["issueType"]["id"]
+
+            l_tuple = (l_business_unit, i_ip, l_port, l_protocol, l_domain, l_issue_type, l_category, l_priority, l_headline, l_text, l_issue_type_id)
+            l_list.append(l_tuple)
+
+            l_records = [l_header]
+            l_records.extend(l_list)
+
+            return l_records
+        except Exception as e:
+            self.__mPrinter.print("__parse_issue() - {0}".format(str(e)), Level.ERROR)
+
+    def get_issue(self) -> None:
+        #Example issue
+        #000e9e47-0e86-33a2-a892-bd8b8cb94187
+        try:
+            self.__m_accept_header = AcceptHeader.JSON.value
+            self.__mPrinter.print("Fetching issue", Level.INFO)
+
+            l_base_url = "{0}/{1}".format(
+                self.__cISSUES_ISSUES,
+                parse.quote(Parser.issue_id)
+            )
+
+            l_http_response = self.__connect_to_api(l_base_url)
+            self.__mPrinter.print("Fetched issue", Level.SUCCESS)
+            self.__mPrinter.print("Parsing issue", Level.INFO)
+            l_json = json.loads(l_http_response.text)
+
+            if self.__m_output_format == OutputFormat.JSON.value:
+                print(l_json)
+            elif self.__m_output_format == OutputFormat.CSV.value:
+                l_list: list = self.__parse_issue(l_json)
+                for l_tuple in l_list:
+                    print(','.join('{0}'.format(l) for l in l_tuple))
+
+        except Exception as e:
+            self.__mPrinter.print("get_issue() - {0}".format(str(e)), Level.ERROR)
