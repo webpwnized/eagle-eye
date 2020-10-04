@@ -166,56 +166,56 @@
 
 ### Examples
 
-####Get Help
+#### Get Help
     python3 eagle-eye.py -h
     python3 eagle-eye.py -u
     python3 eagle-eye.py -e
 
-####Test Connectivity
+#### Test Connectivity
     python3 eagle-eye.py -t
 
-####Get a JSON Web Token (JWT)
+#### Get a JSON Web Token (JWT)
     python3 eagle-eye.py -a
 
-####List business units
+#### List business units
     python3 eagle-eye.py -lbu -o JSON
     python3 eagle-eye.py -lbu -o CSV
 
-####List exposure types
+#### List exposure types
     python3 eagle-eye.py -let -o JSON
     python3 eagle-eye.py -let -o CSV
 
-####List exposure summaries
+#### List exposure summaries
     python3 eagle-eye.py -les -o JSON
     python3 eagle-eye.py -les -o CSV
     python3 eagle-eye.py -les -et TELNET_SERVER -o CSV
     python3 eagle-eye.py -les -es CRITICAL -o CSV
 
-####List exposures - Insecure protocols
+#### List exposures - Insecure protocols
     python3 eagle-eye.py -le -o JSON -et SIP_SERVER,XMPP_SERVER,BACNET_SERVER,ETHERNET_IP_SERVER,MODBUS_SERVER,VX_WORKS_SERVER,CASSANDRA_SERVER,COUCH_DB_SERVER,ELASTICSEARCH_SERVER,HADOOP_SERVER,MEMCACHED_SERVER,MONGO_SERVER,MS_SQL_SERVER,MY_SQL_SERVER,POSTGRES_SERVER,REDIS_SERVER,SHAREPOINT_SERVER,BUILDING_CONTROL_SYSTEM,DATA_STORAGE_AND_ANALYSIS,EMBEDDED_SYSTEM,NETWORKING_AND_SECURITY_INFRASTRUCTURE,RSYNC_SERVER,SMB_SERVER,UNENCRYPTED_FTP_SERVER,AJP_SERVER,NET_BIOS_NAME_SERVER,PC_ANYWHERE_SERVER,RDP_SERVER,RPC_BIND_SERVER,SNMP_SERVER,TELNET_SERVER,UPNP_SERVER,VNC_OVER_HTTP_SERVER,VNC_SERVER,FTP_SERVER,JENKINS_SERVER,SALT_STACK_SERVER,UNENCRYPTED_LOGIN
     
     python3 eagle-eye.py -le -o CSV -et SIP_SERVER,XMPP_SERVER,BACNET_SERVER,ETHERNET_IP_SERVER,MODBUS_SERVER,VX_WORKS_SERVER,CASSANDRA_SERVER,COUCH_DB_SERVER,ELASTICSEARCH_SERVER,HADOOP_SERVER,MEMCACHED_SERVER,MONGO_SERVER,MS_SQL_SERVER,MY_SQL_SERVER,POSTGRES_SERVER,REDIS_SERVER,SHAREPOINT_SERVER,BUILDING_CONTROL_SYSTEM,DATA_STORAGE_AND_ANALYSIS,EMBEDDED_SYSTEM,NETWORKING_AND_SECURITY_INFRASTRUCTURE,RSYNC_SERVER,SMB_SERVER,UNENCRYPTED_FTP_SERVER,AJP_SERVER,NET_BIOS_NAME_SERVER,PC_ANYWHERE_SERVER,RDP_SERVER,RPC_BIND_SERVER,SNMP_SERVER,TELNET_SERVER,UPNP_SERVER,VNC_OVER_HTTP_SERVER,VNC_SERVER,FTP_SERVER,JENKINS_SERVER,SALT_STACK_SERVER,UNENCRYPTED_LOGIN -esort businessUnit.name,severity,port,ip 
 
-####List exposures - Insecure certificates
+#### List exposures - Insecure certificates
     python3 eagle-eye.py -le -o JSON -et DOMAIN_CONTROL_VALIDATED_CERTIFICATE_ADVERTISEMENT,EXPIRED_WHEN_SCANNED_CERTIFICATE_ADVERTISEMENT,INSECURE_SIGNATURE_CERTIFICATE_ADVERTISEMENT,LONG_EXPIRATION_CERTIFICATE_ADVERTISEMENT,SELF_SIGNED_CERTIFICATE_ADVERTISEMENT,SHORT_KEY_CERTIFICATE_ADVERTISEMENT,WILDCARD_CERTIFICATE_ADVERTISEMENT
     
     python3 eagle-eye.py -le -o CSV -et DOMAIN_CONTROL_VALIDATED_CERTIFICATE_ADVERTISEMENT,EXPIRED_WHEN_SCANNED_CERTIFICATE_ADVERTISEMENT,INSECURE_SIGNATURE_CERTIFICATE_ADVERTISEMENT,LONG_EXPIRATION_CERTIFICATE_ADVERTISEMENT,SELF_SIGNED_CERTIFICATE_ADVERTISEMENT,SHORT_KEY_CERTIFICATE_ADVERTISEMENT,WILDCARD_CERTIFICATE_ADVERTISEMENT -esort businessUnit.name,severity,port,ip 
 
-####List exposures - Web domains
+#### List exposures - Web domains
     python3 eagle-eye.py -le -o CSV -et SERVER_SOFTWARE,APPLICATION_SERVER_SOFTWARE
 
-####List issue types
+#### List issue types
     python3 eagle-eye.py -lit -o JSON
     python3 eagle-eye.py -lit -o CSV
 
-####Get issue count
+#### Get issue count
     python3 eagle-eye.py -gic -ibu ebbd0ef3-ed86-4020-b7c8-a55aa73efe60 -ip Critical,High,Medium,Low -ias Active -o JSON
     python3 eagle-eye.py -gic -ibu ebbd0ef3-ed86-4020-b7c8-a55aa73efe60 -ip Critical,High,Medium,Low -ias Active -o CSV
 
-####Get issues
+#### Get issues
     python3 eagle-eye.py -gi -ibu ebbd0ef3-ed86-4020-b7c8-a55aa73efe60 -ip Critical,High,Medium,Low -ias Active -o JSON
     python3 eagle-eye.py -gi -ibu ebbd0ef3-ed86-4020-b7c8-a55aa73efe60 -ip Critical,High,Medium,Low -ias Active -o CSV
     
-####Get issue
+#### Get issue
     python3 eagle-eye.py -gissue -iid 3df7a930-3ec3-3a61-804c-c4e28fce972f -o JSON
     python3 eagle-eye.py -gissue -iid 3df7a930-3ec3-3a61-804c-c4e28fce972f -o CSV
