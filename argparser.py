@@ -7,9 +7,6 @@ class Parser:
     test_connectivity: bool = False
     check_quota: bool = False
     show_examples: bool = False
-    list_studies: bool = False
-    update_studies: bool = False
-    list_unparsed_files: bool = False
     api_key_file_path: str = ""
     database_filename: str = ""
     enable_logging: bool = False

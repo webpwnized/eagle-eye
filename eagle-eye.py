@@ -10,7 +10,7 @@ import argparse
 import sys
 
 
-l_version = '0.0.14 beta'
+l_version = '0.0.15'
 
 
 def print_example_usage():

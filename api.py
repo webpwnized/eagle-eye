@@ -10,8 +10,6 @@ import getpass
 import requests
 import os
 
-l_script_directory = os.path.dirname(__file__)
-
 
 class Override(Enum):
     FORCE_OUTPUT = True
@@ -163,6 +161,8 @@ class API:
     __m_proxy_password: str = ""
     __m_output_format: OutputFormat
     __m_accept_header: AcceptHeader = AcceptHeader.JSON
+    __m_script_directory = os.path.dirname(__file__)
+
 
     # ---------------------------------
     # "Public" class variables
@@ -291,7 +291,7 @@ class API:
     # ---------------------------------
     def __parse_api_key(self) -> None:
         try:
-            l_file = "{}/{}".format(l_script_directory, self.api_key_file)
+            l_file = "{}/{}".format(self.__m_script_directory, self.api_key_file)
             self.__mPrinter.print("Parsing refresh token from {}".format(l_file), Level.INFO)
             with open(l_file) as l_key_file:
                 l_json_data = json.load(l_key_file)
